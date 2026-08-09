@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Device Inspector｜阶段性面试总结</title>
+    <title>Device Inspector｜最终面试总结</title>
     <style>
       :root { color-scheme: light; --ink:#172033; --muted:#5d6b82; --line:#dce4ef; --paper:#fff; --page:#f2f6fb; --blue:#185adb; --blue-soft:#eaf2ff; --green:#087e5b; --green-soft:#e8f7f0; --amber:#a75a00; --amber-soft:#fff4dd; --code:#10203a; }
       * { box-sizing:border-box; } html { scroll-behavior:smooth; }
@@ -32,19 +32,19 @@
       <header class="hero">
         <span class="eyebrow">Vue 3 · TypeScript · Capacitor · Android</span>
         <h1>Device Inspector<br />设备巡检助手</h1>
-        <p class="subtitle">阶段性面试总结（Day 1～Day 3）：一个以 Android 真机为目标的 Hybrid 巡检应用，重点展示类型安全、端侧持久化、原生相机与文件生命周期管理。</p>
-        <p class="meta">项目 App ID：<code>com.hugh.deviceinspector</code> · 当前阶段：Day 3 Task 4 已完成，Day 4 待开始</p>
+        <p class="subtitle">最终面试总结（Day 1～Day 5）：一个完成 Release 签名与 Android 真机验收的 Hybrid 巡检应用，重点展示类型安全、端侧持久化、原生能力与交付闭环。</p>
+        <p class="meta">项目 App ID：<code>com.hugh.deviceinspector</code> · 当前阶段：核心交付已完成 · Release APK/AAB 已验证</p>
       </header>
       <nav class="toc" aria-label="目录">
-        <a href="#pitch">30 秒介绍</a><a href="#status">完成状态</a><a href="#architecture">架构与数据流</a><a href="#modules">模块证据</a><a href="#questions">高频追问</a><a href="#demo">真机演示</a><a href="#boundary">当前边界</a><a href="#next">下一步</a>
+        <a href="#pitch">30 秒介绍</a><a href="#status">完成状态</a><a href="#architecture">架构与数据流</a><a href="#modules">模块证据</a><a href="#questions">高频追问</a><a href="#demo">真机演示</a><a href="#release">Release 交付</a><a href="#boundary">当前边界</a><a href="#next">下一步</a>
       </nav>
       <section id="pitch">
         <h2>一、30 秒项目介绍</h2>
-        <div class="quote">我独立实现了一个面向现场设备巡检的 Android Hybrid App。前端使用 Vue 3、TypeScript、Pinia 和 Vue Router，端侧通过 Capacitor 接入系统相机、私有文件存储和 Preferences。本项目的核心不是只拍一张照片，而是把临时相机照片复制到 App 私有目录，并把其持久路径与类型安全的巡检记录一起保存；应用冷启动后，历史记录和照片文件仍然存在。我还处理了提交过程中的并发操作、保存失败后的文件补偿删除，以及 Android 真机构建、安装和调试。</div>
+        <div class="quote">我独立实现了一个面向现场设备巡检的 Android Hybrid App。前端使用 Vue 3、TypeScript、Pinia 和 Vue Router，端侧通过 Capacitor 接入系统相机、私有文件存储、Preferences、Device、Network 和 Local Notifications。项目重点是把相机临时照片复制到 App 私有目录，再将稳定文件路径与类型安全的巡检记录一起持久化；应用冷启动后，记录和照片仍然存在。最后我使用自建 keystore 构建并验证了签名 Release APK 与 AAB，且在 Android 真机完成了 Release 冒烟测试。</div>
         <div class="grid-3">
           <article class="card"><span class="tag accent">业务价值</span><h3>可追溯的巡检闭环</h3><p>从设备详情创建巡检，填写结果与备注，附加现场照片，在历史中按设备和时间回看记录。</p></article>
           <article class="card"><span class="tag accent">工程价值</span><h3>分层而非堆 API</h3><p>Vue 页面负责交互；Composable 组织页面逻辑；Service 隔离 Capacitor 插件调用与持久化细节。</p></article>
-          <article class="card"><span class="tag accent">原生价值</span><h3>真机可验证</h3><p>已在 Android 10 华为真机上验证相机、文件、Preferences、冷启动恢复和 APK 覆盖安装。</p></article>
+          <article class="card"><span class="tag accent">原生价值</span><h3>真机可验证</h3><p>已在 Android 10 华为真机上验证相机、文件、Preferences、设备信息、网络监听、系统通知和 Release 冷启动。</p></article>
         </div>
       </section>
       <section id="status">
@@ -58,8 +58,11 @@
           <tr><td>Camera 原生相机</td><td><span class="tag done">已完成 · 真机验证</span></td><td>调起 Android 系统相机，WebView 内预览临时照片；取消操作不会被视作错误。</td></tr>
           <tr><td>Filesystem 照片持久化</td><td><span class="tag done">已完成 · 真机验证</span></td><td>照片由临时 URI 拷贝至 <code>Directory.Data/inspection-photos</code>，冷启动后仍存在。</td></tr>
           <tr><td>Android Debug 构建与真机调试</td><td><span class="tag done">已完成</span></td><td>已生成、安装、冷启动 Debug APK；用 ADB 验证包更新时间与应用状态。</td></tr>
-          <tr><td>Device / Network / Local Notifications</td><td><span class="tag pending">待 Day 4</span></td><td>下一阶段接入并进行真机验证。</td></tr>
-          <tr><td>Release APK/AAB 签名</td><td><span class="tag pending">待 Day 5</span></td><td>将补齐签名、Release 构建和安装验证闭环。</td></tr>
+          <tr><td>Device 设备信息</td><td><span class="tag done">已完成 · 真机验证</span></td><td>真实读取 HUAWEI HLK-AL00、Android 10、API 29、厂商、WebView 与真实设备状态。</td></tr>
+          <tr><td>Network 网络状态</td><td><span class="tag done">已完成 · 真机验证</span></td><td>先读取当前网络，再监听 Wi-Fi / 离线等状态变化；页面无需刷新即可更新。</td></tr>
+          <tr><td>Local Notifications</td><td><span class="tag done">已完成 · 真机验证</span></td><td>巡检成功后创建“巡检提醒”渠道并投递系统通知；ADB 已验证通知服务记录。</td></tr>
+          <tr><td>Android 通知权限</td><td><span class="tag done">已完成</span></td><td>合并 Manifest 含 <code>POST_NOTIFICATIONS</code>；代码执行检查、申请与拒绝分支。Android 10 真机无需弹窗即授权。</td></tr>
+          <tr><td>Release APK/AAB 签名</td><td><span class="tag done">已完成 · 真机验证</span></td><td>自建 RSA 2048 keystore；签名 APK、AAB 已生成，Release APK 已卸载 Debug 后安装和冒烟测试。</td></tr>
         </tbody></table>
       </section>
       <section id="architecture">
@@ -72,6 +75,8 @@
         </div>
         <h3>一次带照片的巡检提交数据流</h3>
         <pre>设备详情页 → 巡检表单（InspectionDraft） → Camera.takePhoto() 取得临时照片 → 预览 temporaryPhotos（仅内存、临时 URI） → 提交开始时复制 photosToPersist 快照 → Filesystem.copy() 到 Directory.Data/inspection-photos/ → 创建 InspectionRecord（photoPaths 使用 durable file:// URI） → Preferences 持久化成功 → Pinia 更新，巡检历史响应式展示</pre>
+        <h3>Day 4 运行环境与通知流</h3>
+        <pre>HomeView → useNativeEnvironment → Device.getInfo() + Network.getStatus() → Network.addListener() → 网络切换时响应式更新；InspectionFormView 保存成功 → useInspectionNotification → checkPermissions() / requestPermissions() → LocalNotifications.createChannel() → LocalNotifications.schedule() → Android 系统通知栏</pre>
       </section>
       <section id="modules">
         <h2>四、模块拆解：面试可讲的关键决策</h2>
@@ -82,6 +87,9 @@
           <article class="card"><span class="tag done">Day 3 Task 4</span><h3>临时照片变为持久资产</h3><p><strong>问题：</strong>相机缓存可能被系统清理，不能把临时路径直接持久化。</p><p><strong>决策：</strong>拷贝到 App 私有的 <code>Directory.Data</code>，记录中只保存 durable <code>file://</code> URI。</p><p><strong>可讲价值：</strong>理解缓存、私有存储、持久化路径与 Android 权限边界。</p></article>
           <article class="card"><span class="tag done">Code Review Follow-up</span><h3>提交期间的一致性</h3><p><strong>问题：</strong>异步保存中仍修改照片列表，可能让本次提交输入不稳定。</p><p><strong>决策：</strong>提交开始复制 <code>photosToPersist</code>；保存照片和记录阶段禁用拍照与移除。</p><p><strong>可讲价值：</strong>UI 锁定解决交互，数据快照定义异步任务输入，两者缺一不可。</p></article>
           <article class="card"><span class="tag done">Android 真机</span><h3>从 Web 构建到真实设备</h3><p><strong>问题：</strong>浏览器能跑不代表 Android 能构建、安装和持久化。</p><p><strong>决策：</strong>通过 Capacitor sync、Gradle Debug 构建、ADB 安装、强制停止冷启动完成验证。</p><p><strong>可讲价值：</strong>真实遇到 JDK 兼容问题，最终固定使用 JDK 21 构建。</p></article>
+          <article class="card"><span class="tag done">Day 4 Task 1</span><h3>Device 与 Network 运行环境</h3><p><strong>问题：</strong>原生能力不可见，无法判断 App 运行环境与网络状态。</p><p><strong>决策：</strong>分别封装 Device、Network Service，再用 Composable 管理初始读取、部分失败和监听器卸载。</p><p><strong>可讲价值：</strong><code>Promise.allSettled</code>、生命周期清理、运行态不滥用 Pinia。</p></article>
+          <article class="card"><span class="tag done">Day 4 Task 2</span><h3>本地通知与权限</h3><p><strong>问题：</strong>记录保存后缺少系统级确认，Android 13+ 还需处理通知权限。</p><p><strong>决策：</strong>通知作为记录保存后的非阻塞增强反馈；使用稳定渠道、权限状态分支和记录 ID 派生通知 ID。</p><p><strong>可讲价值：</strong>主业务与增强反馈解耦；即时通知不需要精确闹钟权限。</p></article>
+          <article class="card"><span class="tag done">Day 5</span><h3>Release 签名与交付</h3><p><strong>问题：</strong>Debug 能跑不等于可分发；Debug 与 Release 的签名不同也不能直接覆盖安装。</p><p><strong>决策：</strong>本地 keystore 与 Git 忽略的 properties 配置签名；生成 APK/AAB、验证签名，卸载 Debug 后安装 Release。</p><p><strong>可讲价值：</strong>keystore 安全、APK/AAB、签名证书、版本号与真机交付闭环。</p></article>
         </div>
       </section>
       <section id="questions">
@@ -91,22 +99,38 @@
         <h3>3. Filesystem 文件写成功、Preferences 写失败时如何处理？</h3><p>当前实现是补偿式一致性：先复制临时照片，再尝试保存巡检记录；如果记录创建或 Preferences 保存失败，就删除本次刚复制出的文件。它不是数据库事务；如果进程在两步之间被系统杀死，仍可能出现孤儿文件。后续可加启动时清理或暂存目录加提交标记。</p>
         <h3>4. 为什么相机不需要在页面里直接申请 CAMERA 权限？</h3><p>当前配置通过 Capacitor 打开系统相机 Activity，且 <code>saveToGallery: false</code>。应用没有直接访问公共相册或自行接管相机硬件，因此本方案不需要页面中直接处理 <code>CAMERA</code> 或外部存储权限。未来接入媒体库、公开相册或通知功能时，会按对应插件和 Android 版本处理权限。</p>
         <h3>5. 为什么只禁用按钮还不够？</h3><p>按钮禁用是 UI 层防护，避免用户继续操作；异步任务则应在开始时拥有明确、稳定的业务输入。因此还要复制 <code>const photosToPersist = [...temporaryPhotos.value]</code>。后续文件保存依赖这份快照，而不是依赖可能变化的响应式数组。</p>
+        <h3>6. 为什么既要调用 Network.getStatus()，又要 addListener()？</h3><p><code>getStatus()</code> 提供进入页面时的当前快照；<code>addListener('networkStatusChange')</code> 处理之后的 Wi-Fi、移动网络和离线变化。只用前者会状态过期，只用后者会缺少首屏状态。监听器在页面卸载时移除，避免重复回调和内存泄漏。</p>
+        <h3>7. 为什么通知失败不能让巡检提交失败？</h3><p>巡检记录写入 Preferences 才是主业务成功标准；本地通知是保存成功后的用户体验增强。权限拒绝或通知调度异常都应单独反馈，不能回滚已持久化的记录。</p>
+        <h3>8. 为什么 Release APK 不能覆盖 Debug APK？</h3><p>Android 用包名和签名证书共同判断是否为合法更新。当前 Debug 包使用 Android Debug Keystore，Release 包使用自建 Release Keystore，证书不同，因此必须先卸载 Debug 包或使用不同 applicationId。项目最终选择保留正式包名并卸载 Debug 后安装 Release。</p>
       </section>
       <section id="demo">
         <h2>六、3 分钟真机演示脚本</h2>
-        <ol><li><strong>开场（20 秒）：</strong>展示设备列表，说明这是离线优先的现场巡检 App，巡检记录和照片都存储在端侧。</li><li><strong>业务流（40 秒）：</strong>进入设备详情，发起巡检，选择结果、填写备注，说明草稿与正式记录在类型上分离。</li><li><strong>原生能力（50 秒）：</strong>点击拍照，展示 Android 系统相机；拍摄后回到 WebView 查看预览。说明此时是临时照片，尚未进入持久化历史。</li><li><strong>持久化（40 秒）：</strong>提交巡检，观察“保存照片 / 保存记录”状态。说明临时照片会复制到 App 私有目录，成功后记录写入 Preferences。</li><li><strong>恢复证明（30 秒）：</strong>进入历史查看新记录和照片数量；关闭并重新打开应用，证明记录仍然存在。</li><li><strong>工程追问（20 秒）：</strong>主动补充：提交阶段禁用拍照、移除，且对照片做快照；保存失败时会补偿删除本次新复制的文件。</li></ol>
-        <p class="small">演示时不要试图展示所有功能；优先让面试官看到“拍照 → 私有文件持久化 → 冷启动恢复”这个最有辨识度的完整闭环。</p>
+        <ol><li><strong>开场（20 秒）：</strong>展示首页运行环境，说明这是已安装在 Android 真机上的签名 Release App，并展示真实设备与网络状态。</li><li><strong>业务流（35 秒）：</strong>进入设备详情，发起巡检，选择结果、填写备注，说明草稿与正式记录在类型上分离。</li><li><strong>原生能力（45 秒）：</strong>点击拍照，展示 Android 系统相机；拍摄后回到 WebView 查看临时预览，说明临时 URI 还未持久化。</li><li><strong>持久化与通知（45 秒）：</strong>提交巡检，说明照片复制到私有目录、记录写入 Preferences；展示成功反馈和 Android 通知栏的“巡检记录已保存”。</li><li><strong>恢复证明（30 秒）：</strong>进入历史查看新记录和照片数量；关闭或强制停止后重新打开，确认 Release 包中记录仍然存在。</li><li><strong>工程追问（25 秒）：</strong>说明提交阶段的照片快照与 UI 锁定、失败补偿删除，以及通知失败不会影响已保存记录。</li></ol>
+        <p class="small">演示时优先让面试官看到“Release 真机 → 系统相机 → 私有文件持久化 → 本地通知 → 冷启动恢复”的完整端侧闭环。</p>
+      </section>
+      <section id="release">
+        <h2>七、Release 交付：从 Debug 到可分发包</h2>
+        <div class="grid">
+          <article class="card"><h3>签名安全</h3><p>Release keystore 放在本地 <code>android/keystore/</code>，密码配置在被 Git 忽略的 <code>android/keystore.properties</code>。仓库只保留无秘密的示例模板。</p></article>
+          <article class="card"><h3>构建产物</h3><p>已生成签名 Release APK（真机安装）与 AAB（应用商店上传）。使用 <code>apksigner verify</code> 验证 APK v2 签名，使用 <code>jarsigner</code> 校验 AAB。</p></article>
+          <article class="card"><h3>真机 Release 验证</h3><p>Debug 与 Release 证书不同，不能直接覆盖。经授权卸载旧 Debug 包后安装 Release APK，并完成相机、文件、Preferences、通知和冷启动冒烟测试。</p></article>
+          <article class="card"><h3>版本与包名</h3><p>当前为 <code>com.hugh.deviceinspector</code>、<code>versionCode 1</code>、<code>versionName 1.0</code>。未来发布更新必须递增 versionCode，并安全备份 Release keystore。</p></article>
+        </div>
+        <pre>pnpm android:sync
+cd android
+JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" ./gradlew assembleRelease bundleRelease
+/Users/hugh/Library/Android/sdk/build-tools/36.0.0/apksigner verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk</pre>
       </section>
       <section id="boundary">
-        <h2>七、当前边界与诚实说明</h2>
-        <div class="warning"><strong>项目当前可用于展示，但还没有完成最初范围中的全部 Capacitor 能力。</strong> 面试中应明确说“已完成端侧巡检闭环，Device、Network、通知与 Release 签名正在后续迭代”，而不是声称它们已经上线。</div>
-        <ul><li><strong>尚未接入：</strong>Capacitor Device、Network、Local Notifications、Release APK/AAB 签名。</li><li><strong>已知技术债：</strong>若照片复制完成但 Preferences 写入前进程被杀，可能产生孤儿文件；现有补偿删除只能覆盖可捕获的失败。</li><li><strong>展示边界：</strong>历史列表目前显示照片数量，尚未做持久照片缩略图墙。</li><li><strong>网络层：</strong>设备数据目前由有模拟延迟的 Service 提供，未为了技术栈清单而强行引入 Axios。后续有真实同步接口时，再有意义地接入请求层、超时、拦截器和离线队列。</li></ul>
+        <h2>八、当前边界与诚实说明</h2>
+        <div class="warning"><strong>项目已完成最初定义的核心 Hybrid 能力与 Release 交付，但它仍是端侧离线优先的求职项目，不应被包装成已上线的生产巡检平台。</strong></div>
+        <ul><li><strong>已知技术债：</strong>若照片复制完成但 Preferences 写入前进程被杀，可能产生孤儿文件；现有补偿删除只能覆盖可捕获的失败。</li><li><strong>Release 加固：</strong>未来应让 Gradle 在缺少或填写不完整的 <code>keystore.properties</code> 时明确阻止 Release 构建，防止误生成未签名产物。</li><li><strong>展示边界：</strong>历史列表目前显示照片数量，尚未做持久照片缩略图墙。</li><li><strong>网络层：</strong>设备数据目前由有模拟延迟的 Service 提供，未为了技术栈清单而强行引入 Axios。接入真实后端时，再封装请求实例、超时、拦截器和离线同步队列。</li><li><strong>Android 13+ 实机：</strong>通知权限申请逻辑与 Manifest 已实现；当前真机是 Android 10，因此未能实际看到 Android 13+ 的授权弹窗。</li></ul>
       </section>
       <section id="next">
-        <h2>八、下一阶段：Day 4 · Task 1</h2>
-        <p><span class="tag pending">即将开始</span> 接入 Capacitor <strong>Device</strong> 与 <strong>Network</strong>，并继续保持 Service / Composable / View 分层。</p>
-        <div class="grid"><article class="card"><h3>目标</h3><p>读取设备型号、操作系统、系统版本、应用版本等环境信息；读取并监听实时网络状态，并在页面中让用户可见。</p></article><article class="card"><h3>完成标准</h3><p>在 Android 真机上查看真实设备信息；切换 Wi-Fi / 移动网络或关闭网络后，确认状态变更能反映到页面。</p></article></div>
-        <p class="quote">本项目的目标不是功能数量，而是每个原生能力都有清晰分层、异常边界、真机验证和可面试解释的设计理由。</p>
+        <h2>九、交付完成后的下一步</h2>
+        <p><span class="tag done">核心交付完成</span> 当前最有价值的工作不再是继续堆功能，而是把已有证据转化为求职材料和稳定的面试表达。</p>
+        <div class="grid"><article class="card"><h3>项目打磨</h3><p>优先处理 Release 签名缺失保护、网络加载态样式、照片孤儿文件清理；不要在没有真实业务价值时强行添加更多插件。</p></article><article class="card"><h3>求职准备</h3><p>整理 README、架构图、三分钟真机演示视频；围绕相机文件生命周期、端侧持久化、通知权限和 Release 签名进行模拟问答。</p></article></div>
+        <p class="quote">本项目的核心竞争力不是功能数量，而是每个原生能力都有清晰分层、异常边界、真机验证、Release 交付和可面试解释的设计理由。</p>
       </section>
     </main>
   </body>

@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Android release-signing secrets (must never be committed)
+android/keystore/
+android/keystore.properties
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
