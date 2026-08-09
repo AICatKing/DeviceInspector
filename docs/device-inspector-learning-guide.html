@@ -1,0 +1,1638 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Device Inspector 设备巡检助手：五天开发路线、当前基线审查、下一任务和面试学习手册。"
+    />
+    <title>Device Inspector｜开发与学习手册</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --page-bg: #f3f6fb;
+        --surface: #ffffff;
+        --surface-soft: #f8fafc;
+        --text: #172033;
+        --text-secondary: #5f6b7a;
+        --text-light: #7c8796;
+        --line: #dfe5ee;
+        --primary: #2457d6;
+        --primary-dark: #183eaa;
+        --primary-soft: #eaf0ff;
+        --green: #137a48;
+        --green-soft: #e8f7ef;
+        --amber: #a65a00;
+        --amber-soft: #fff3dd;
+        --red: #b42318;
+        --red-soft: #ffebe9;
+        --purple: #6941c6;
+        --purple-soft: #f1ebff;
+        --shadow: 0 14px 40px rgba(29, 41, 57, 0.08);
+        --radius-large: 22px;
+        --radius-medium: 14px;
+        --content-width: 1160px;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 10% 0%, rgba(36, 87, 214, 0.11), transparent 28rem),
+          radial-gradient(circle at 100% 15%, rgba(105, 65, 198, 0.08), transparent 25rem),
+          var(--page-bg);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        line-height: 1.72;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      code,
+      pre {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      code {
+        padding: 0.12rem 0.38rem;
+        border-radius: 0.35rem;
+        color: #25407a;
+        background: #edf2fb;
+        font-size: 0.9em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 1rem 0;
+        padding: 1rem 1.1rem;
+        border: 1px solid #263855;
+        border-radius: 12px;
+        color: #dbe7ff;
+        background: #142038;
+        line-height: 1.62;
+      }
+
+      pre code {
+        padding: 0;
+        color: inherit;
+        background: transparent;
+        font-size: 0.88rem;
+      }
+
+      .skip-link {
+        position: fixed;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: 100;
+        padding: 0.65rem 0.9rem;
+        border-radius: 8px;
+        color: #fff;
+        background: var(--primary);
+        transform: translateY(-160%);
+        transition: transform 0.2s ease;
+      }
+
+      .skip-link:focus {
+        transform: translateY(0);
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-bottom: 1px solid rgba(223, 229, 238, 0.85);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(14px);
+      }
+
+      .topbar__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: min(var(--content-width), calc(100% - 2rem));
+        min-height: 64px;
+        margin: 0 auto;
+        gap: 1rem;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+      }
+
+      .brand__mark {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        color: #fff;
+        background: linear-gradient(145deg, var(--primary), var(--purple));
+        box-shadow: 0 8px 18px rgba(36, 87, 214, 0.25);
+      }
+
+      .topbar nav {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .topbar nav::-webkit-scrollbar {
+        display: none;
+      }
+
+      .topbar nav a {
+        flex: 0 0 auto;
+        padding: 0.48rem 0.72rem;
+        border-radius: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+
+      .topbar nav a:hover,
+      .topbar nav a:focus-visible {
+        color: var(--primary);
+        background: var(--primary-soft);
+        outline: none;
+      }
+
+      .page {
+        width: min(var(--content-width), calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 2.5rem 0 5rem;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
+        gap: 2rem;
+        padding: clamp(1.5rem, 4vw, 3.4rem);
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        border-radius: 28px;
+        color: #fff;
+        background: linear-gradient(135deg, #173a91 0%, #2457d6 58%, #6941c6 100%);
+        box-shadow: 0 24px 65px rgba(30, 64, 175, 0.2);
+      }
+
+      .hero::after {
+        position: absolute;
+        right: -100px;
+        bottom: -160px;
+        width: 360px;
+        height: 360px;
+        border: 72px solid rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        content: "";
+      }
+
+      .eyebrow {
+        margin: 0 0 0.75rem;
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 0.82rem;
+        font-weight: 750;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      .hero h1 {
+        max-width: 720px;
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 3.8rem);
+        line-height: 1.12;
+        letter-spacing: -0.045em;
+      }
+
+      .hero__lead {
+        max-width: 700px;
+        margin: 1.25rem 0 0;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: clamp(1rem, 2vw, 1.18rem);
+      }
+
+      .hero__summary {
+        position: relative;
+        z-index: 1;
+        align-self: end;
+        padding: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.11);
+        backdrop-filter: blur(8px);
+      }
+
+      .hero__summary strong {
+        display: block;
+        margin-bottom: 0.45rem;
+        font-size: 1.05rem;
+      }
+
+      .hero__summary p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 0.9rem;
+      }
+
+      .status-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-top: 1.35rem;
+      }
+
+      .hero .pill {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .section {
+        scroll-margin-top: 84px;
+        margin-top: 2.2rem;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin: 0 0 1rem;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-size: clamp(1.45rem, 3vw, 2rem);
+        letter-spacing: -0.035em;
+      }
+
+      .section-heading p {
+        max-width: 600px;
+        margin: 0.25rem 0 0;
+        color: var(--text-secondary);
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-large);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .card--padded {
+        padding: clamp(1.2rem, 3vw, 2rem);
+      }
+
+      .next-task {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.7fr);
+        gap: 1.2rem;
+      }
+
+      .task-main {
+        padding: clamp(1.35rem, 3vw, 2.1rem);
+        border: 2px solid #a9bfff;
+        border-radius: var(--radius-large);
+        background: linear-gradient(145deg, #fff, #f3f6ff);
+        box-shadow: var(--shadow);
+      }
+
+      .task-number {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.85rem;
+        padding: 0.32rem 0.65rem;
+        border-radius: 999px;
+        color: var(--primary-dark);
+        background: var(--primary-soft);
+        font-size: 0.8rem;
+        font-weight: 750;
+      }
+
+      .task-main h3 {
+        margin: 0;
+        font-size: clamp(1.35rem, 3vw, 1.9rem);
+        line-height: 1.35;
+      }
+
+      .task-main > p {
+        color: var(--text-secondary);
+      }
+
+      .task-aside {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .callout {
+        padding: 1.15rem 1.2rem;
+        border: 1px solid var(--line);
+        border-left-width: 5px;
+        border-radius: var(--radius-medium);
+        background: var(--surface);
+      }
+
+      .callout h3,
+      .callout h4 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .callout p,
+      .callout ul {
+        margin-top: 0.45rem;
+        margin-bottom: 0;
+        color: var(--text-secondary);
+      }
+
+      .callout--green {
+        border-left-color: var(--green);
+        background: var(--green-soft);
+      }
+
+      .callout--amber {
+        border-left-color: var(--amber);
+        background: var(--amber-soft);
+      }
+
+      .callout--red {
+        border-left-color: var(--red);
+        background: var(--red-soft);
+      }
+
+      .callout--blue {
+        border-left-color: var(--primary);
+        background: var(--primary-soft);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.62rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--text-secondary);
+        background: var(--surface-soft);
+        font-size: 0.8rem;
+        font-weight: 650;
+      }
+
+      .checklist {
+        display: grid;
+        gap: 0.7rem;
+        margin: 1rem 0 0;
+      }
+
+      .check-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.7rem;
+        align-items: start;
+        padding: 0.8rem 0.9rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        cursor: pointer;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+      }
+
+      .check-item:hover {
+        border-color: #a9bfff;
+        transform: translateY(-1px);
+      }
+
+      .check-item input {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-top: 0.22rem;
+        accent-color: var(--primary);
+      }
+
+      .check-item span {
+        color: var(--text-secondary);
+      }
+
+      .check-item strong {
+        display: block;
+        color: var(--text);
+      }
+
+      .check-item:has(input:checked) {
+        border-color: #a8ddc2;
+        background: #f2fbf6;
+      }
+
+      .check-item input:checked + span {
+        color: var(--text-light);
+        text-decoration: line-through;
+      }
+
+      .progress-wrap {
+        margin-top: 1.2rem;
+      }
+
+      .progress-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.4rem;
+        color: var(--text-secondary);
+        font-size: 0.82rem;
+        font-weight: 650;
+      }
+
+      .progress-track {
+        overflow: hidden;
+        height: 9px;
+        border-radius: 999px;
+        background: #dfe6f2;
+      }
+
+      .progress-bar {
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--primary), var(--purple));
+        transition: width 0.25s ease;
+      }
+
+      .two-column,
+      .three-column {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .two-column {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .three-column {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .mini-card {
+        padding: 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-medium);
+        background: var(--surface);
+      }
+
+      .mini-card h3,
+      .mini-card h4 {
+        margin: 0 0 0.55rem;
+        line-height: 1.4;
+      }
+
+      .mini-card p,
+      .mini-card ul {
+        margin-top: 0.45rem;
+        margin-bottom: 0;
+        color: var(--text-secondary);
+      }
+
+      ul,
+      ol {
+        padding-left: 1.35rem;
+      }
+
+      li + li {
+        margin-top: 0.35rem;
+      }
+
+      .clean-list {
+        padding: 0;
+        list-style: none;
+      }
+
+      .clean-list li {
+        position: relative;
+        padding-left: 1.5rem;
+      }
+
+      .clean-list li::before {
+        position: absolute;
+        top: 0.62rem;
+        left: 0;
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: var(--primary);
+        content: "";
+      }
+
+      .decision-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .decision-card {
+        position: relative;
+        padding: 1.3rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-medium);
+        background: var(--surface);
+      }
+
+      .decision-card--recommended {
+        border: 2px solid var(--primary);
+        background: linear-gradient(180deg, #fff, #f4f7ff);
+      }
+
+      .recommended-label {
+        position: absolute;
+        top: -0.7rem;
+        right: 1rem;
+        padding: 0.22rem 0.6rem;
+        border-radius: 999px;
+        color: #fff;
+        background: var(--primary);
+        font-size: 0.72rem;
+        font-weight: 750;
+      }
+
+      .decision-card h3 {
+        margin: 0 0 0.7rem;
+      }
+
+      .decision-card h4 {
+        margin: 1rem 0 0.25rem;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+      }
+
+      .decision-card ul {
+        margin: 0.35rem 0 0;
+        color: var(--text-secondary);
+        font-size: 0.92rem;
+      }
+
+      .architecture-flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        align-items: stretch;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .architecture-node {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 105px;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        text-align: center;
+        background: var(--surface-soft);
+      }
+
+      .architecture-node:not(:last-child)::after {
+        position: absolute;
+        top: 50%;
+        right: -0.66rem;
+        z-index: 2;
+        color: var(--primary);
+        content: "→";
+        font-weight: 800;
+        transform: translateY(-50%);
+      }
+
+      .architecture-node strong {
+        display: block;
+      }
+
+      .architecture-node small {
+        display: block;
+        margin-top: 0.2rem;
+        color: var(--text-secondary);
+      }
+
+      .timeline {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .day {
+        display: grid;
+        grid-template-columns: 88px minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+        padding: 1.1rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-medium);
+        background: var(--surface);
+      }
+
+      .day__label {
+        display: grid;
+        place-items: center;
+        min-height: 64px;
+        border-radius: 12px;
+        color: var(--primary-dark);
+        background: var(--primary-soft);
+        font-weight: 800;
+      }
+
+      .day h3 {
+        margin: 0 0 0.35rem;
+      }
+
+      .day p {
+        margin: 0;
+        color: var(--text-secondary);
+      }
+
+      .day ul {
+        margin-bottom: 0;
+        color: var(--text-secondary);
+      }
+
+      details.review {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-medium);
+        background: var(--surface);
+      }
+
+      details.review + details.review {
+        margin-top: 0.75rem;
+      }
+
+      details.review summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.15rem;
+        cursor: pointer;
+        font-weight: 750;
+        list-style: none;
+      }
+
+      details.review summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.review summary::after {
+        color: var(--primary);
+        content: "+";
+        font-size: 1.35rem;
+        line-height: 1;
+      }
+
+      details.review[open] summary {
+        border-bottom: 1px solid var(--line);
+        background: var(--surface-soft);
+      }
+
+      details.review[open] summary::after {
+        content: "−";
+      }
+
+      .review__body {
+        padding: 0.2rem 1.2rem 1.2rem;
+        color: var(--text-secondary);
+      }
+
+      .review__body h4 {
+        margin-bottom: 0.3rem;
+        color: var(--text);
+      }
+
+      .knowledge-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        font-size: 0.92rem;
+      }
+
+      .knowledge-table th,
+      .knowledge-table td {
+        padding: 0.85rem;
+        border: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .knowledge-table th {
+        color: #31405a;
+        background: #edf2fa;
+      }
+
+      .knowledge-table td {
+        color: var(--text-secondary);
+      }
+
+      .question-list {
+        counter-reset: question;
+        display: grid;
+        gap: 0.75rem;
+        padding: 0;
+        list-style: none;
+      }
+
+      .question-list li {
+        position: relative;
+        padding: 0.9rem 1rem 0.9rem 3rem;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        color: var(--text-secondary);
+        background: var(--surface-soft);
+        counter-increment: question;
+      }
+
+      .question-list li::before {
+        position: absolute;
+        top: 0.85rem;
+        left: 0.9rem;
+        display: grid;
+        place-items: center;
+        width: 1.45rem;
+        height: 1.45rem;
+        border-radius: 50%;
+        color: #fff;
+        background: var(--primary);
+        content: counter(question);
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+
+      .footer {
+        margin-top: 2.5rem;
+        padding: 1.5rem;
+        border-radius: var(--radius-large);
+        color: rgba(255, 255, 255, 0.84);
+        background: #17233b;
+        text-align: center;
+      }
+
+      .footer strong {
+        color: #fff;
+      }
+
+      .footer p {
+        margin: 0.35rem 0;
+      }
+
+      .print-button {
+        padding: 0.48rem 0.72rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        background: var(--surface);
+        cursor: pointer;
+        font-size: 0.84rem;
+        font-weight: 650;
+      }
+
+      .print-button:hover {
+        color: var(--primary);
+        border-color: #a9bfff;
+      }
+
+      @media (max-width: 920px) {
+        .hero,
+        .next-task {
+          grid-template-columns: 1fr;
+        }
+
+        .decision-grid,
+        .three-column {
+          grid-template-columns: 1fr;
+        }
+
+        .architecture-flow {
+          grid-template-columns: 1fr;
+        }
+
+        .architecture-node:not(:last-child)::after {
+          top: auto;
+          right: 50%;
+          bottom: -1.05rem;
+          content: "↓";
+          transform: translateX(50%);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .topbar__inner {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 0.65rem 0;
+        }
+
+        .topbar nav {
+          width: 100%;
+        }
+
+        .print-button {
+          display: none;
+        }
+
+        .two-column {
+          grid-template-columns: 1fr;
+        }
+
+        .day {
+          grid-template-columns: 1fr;
+        }
+
+        .day__label {
+          min-height: auto;
+          padding: 0.55rem;
+        }
+
+        .knowledge-table {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+
+      @media print {
+        :root {
+          --page-bg: #fff;
+          --shadow: none;
+        }
+
+        body {
+          background: #fff;
+          font-size: 10.5pt;
+        }
+
+        .topbar,
+        .print-button,
+        .progress-wrap {
+          display: none;
+        }
+
+        .page {
+          width: 100%;
+          padding: 0;
+        }
+
+        .hero {
+          color: #172033;
+          background: #edf2fa;
+          box-shadow: none;
+        }
+
+        .hero .pill,
+        .hero__lead,
+        .eyebrow,
+        .hero__summary p {
+          color: #31405a;
+        }
+
+        .hero__summary {
+          border-color: #ccd5e2;
+          background: #fff;
+        }
+
+        details.review:not([open]) > *:not(summary) {
+          display: block;
+        }
+
+        details.review summary::after {
+          display: none;
+        }
+
+        .card,
+        .task-main,
+        .mini-card,
+        .decision-card,
+        .day,
+        details.review {
+          break-inside: avoid;
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="topbar">
+      <div class="topbar__inner">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true">DI</span>
+          <span>Device Inspector 学习手册</span>
+        </div>
+        <nav aria-label="页面目录">
+          <a href="#next-task">下一任务</a>
+          <a href="#learning">学习重点</a>
+          <a href="#architecture">架构决策</a>
+          <a href="#roadmap">5 天路线</a>
+          <a href="#review">基线审查</a>
+          <button class="print-button" type="button" id="print-page">打印 / PDF</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page" id="main-content">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Vue 3 · TypeScript · Capacitor · Android</p>
+          <h1 id="page-title">设备巡检助手<br />开发与学习手册</h1>
+          <p class="hero__lead">
+            五天内完成一个能运行、能调试、能展示、能打包，并且你自己能解释清楚的 Hybrid App。
+          </p>
+          <div class="status-row" aria-label="当前状态">
+            <span class="pill">✓ Web 基础构建通过</span>
+            <span class="pill">✓ 设备列表与详情已有骨架</span>
+            <span class="pill">下一步：巡检领域模型</span>
+          </div>
+        </div>
+        <aside class="hero__summary">
+          <strong>当前最重要的原则</strong>
+          <p>
+            先理解数据和职责，再创建页面；先跑通一条核心流程，再增加原生能力；每段代码都要能说明“为什么”。
+          </p>
+        </aside>
+      </section>
+
+      <section class="section" id="next-task" aria-labelledby="next-task-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="next-task-title">你接下来只做这一个任务</h2>
+            <p>不要同时安装 Capacitor、创建页面或接入相机。先把巡检业务的数据边界想清楚。</p>
+          </div>
+        </div>
+
+        <div class="next-task">
+          <article class="task-main">
+            <span class="task-number">DAY 1 · TASK 2</span>
+            <h3>定义巡检领域模型</h3>
+            <p>
+              目标是用 TypeScript 准确表达“正在填写的巡检表单”和“已经提交的巡检记录”，并明确照片、时间、结果、设备关联和 ID 的类型。
+            </p>
+
+            <h4>本任务会解决的 5 个问题</h4>
+            <ol>
+              <li>一条巡检记录需要哪些字段？</li>
+              <li>编辑中的表单和已提交记录是不是同一种类型？</li>
+              <li>巡检结果应该使用字符串、布尔值还是联合类型？</li>
+              <li>照片字段保存 Base64、临时 URL，还是持久化文件引用？</li>
+              <li>ID 和提交时间应该由页面、Store 还是 Service 生成？</li>
+            </ol>
+
+            <h4>预计涉及的文件</h4>
+            <pre><code>新增  src/types/inspection.ts
+可选  src/constants/inspection.ts</code></pre>
+
+            <div class="callout callout--green">
+              <h4>完成标准</h4>
+              <ul>
+                <li>没有使用 <code>any</code>。</li>
+                <li>巡检结果使用有限状态，而不是无法约束的普通字符串。</li>
+                <li>表单草稿和持久化记录的差异可以从类型中看出来。</li>
+                <li>照片字段只保存文件引用，不保存大体积 Base64。</li>
+                <li><code>pnpm build</code> 仍然通过。</li>
+                <li>你能用自己的话解释每个字段存在的理由。</li>
+              </ul>
+            </div>
+          </article>
+
+          <aside class="task-aside">
+            <div class="callout callout--amber">
+              <h3>这一步不要提前做</h3>
+              <ul>
+                <li>不安装 Capacitor 插件</li>
+                <li>不创建 Android 工程</li>
+                <li>不创建巡检表单页面</li>
+                <li>不修改 Pinia Store</li>
+                <li>不接入 Preferences 或 Camera</li>
+              </ul>
+            </div>
+
+            <div class="callout callout--blue">
+              <h3>开始前你要先做</h3>
+              <ol>
+                <li>阅读现有的 <code>src/types/device.ts</code>。</li>
+                <li>确认自己理解联合类型、接口和 <code>Record</code>。</li>
+                <li>不看答案，先在纸上写出你认为巡检记录需要的字段。</li>
+                <li>思考哪些字段在编辑时可以为空，提交后必须存在。</li>
+              </ol>
+            </div>
+
+            <div class="card card--padded">
+              <h3 style="margin-top: 0">本任务进度</h3>
+              <div class="checklist" data-checklist="next-task">
+                <label class="check-item">
+                  <input type="checkbox" data-check-id="read-device-type" />
+                  <span><strong>阅读现有类型</strong>理解 <code>DeviceStatus</code>、<code>Device</code> 和 <code>Record</code>。</span>
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" data-check-id="draft-fields" />
+                  <span><strong>自己列出字段</strong>先独立思考，不直接复制最终类型。</span>
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" data-check-id="explain-difference" />
+                  <span><strong>解释草稿与记录</strong>说清楚两者为什么不能完全相同。</span>
+                </label>
+                <label class="check-item">
+                  <input type="checkbox" data-check-id="ready-to-code" />
+                  <span><strong>准备进入编码</strong>向导师回复“开始 Day 1 Task 2”。</span>
+                </label>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-meta">
+                  <span>准备进度</span>
+                  <span id="progress-label">0 / 4</span>
+                </div>
+                <div class="progress-track" aria-hidden="true">
+                  <div class="progress-bar" id="progress-bar"></div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="learning" aria-labelledby="learning-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="learning-title">这一阶段你必须学习什么</h2>
+            <p>学习目标不是背语法，而是能根据业务约束设计类型，并解释不同方案的取舍。</p>
+          </div>
+        </div>
+
+        <div class="card card--padded">
+          <div class="three-column">
+            <article class="mini-card">
+              <span class="pill">基础</span>
+              <h3>联合类型</h3>
+              <p>用有限值表达业务状态，避免任意字符串进入系统。</p>
+              <pre><code>type Result =
+  | 'passed'
+  | 'failed'</code></pre>
+            </article>
+            <article class="mini-card">
+              <span class="pill">建模</span>
+              <h3>草稿与实体</h3>
+              <p>编辑状态允许不完整；提交后的业务实体应该满足更严格的约束。</p>
+              <pre><code>Draft ≠ Record
+可选字段 ≠ 必填字段</code></pre>
+            </article>
+            <article class="mini-card">
+              <span class="pill">分层</span>
+              <h3>序列化边界</h3>
+              <p>Pinia、Preferences 和 Filesystem 保存的是不同形态和生命周期的数据。</p>
+              <pre><code>内存状态
+持久化元数据
+二进制文件</code></pre>
+            </article>
+          </div>
+
+          <table class="knowledge-table">
+            <thead>
+              <tr>
+                <th>知识点</th>
+                <th>必须理解的内容</th>
+                <th>常见误区</th>
+                <th>面试表达重点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>联合类型</td>
+                <td>把巡检结果限制为一组合法状态，编译期阻止拼写错误和未知状态。</td>
+                <td>为了省事全部写成 <code>string</code>。</td>
+                <td>类型本身就是业务规则的一部分。</td>
+              </tr>
+              <tr>
+                <td><code>interface</code> 与 <code>type</code></td>
+                <td>对象结构通常可用接口；联合、映射和组合类型通常更适合 type。</td>
+                <td>机械争论哪一个“永远更好”。</td>
+                <td>根据表达目标选择，而不是根据个人口号选择。</td>
+              </tr>
+              <tr>
+                <td>可选属性与 <code>null</code></td>
+                <td><code>?</code> 表示可能不存在；<code>null</code> 通常表示字段存在但当前没有值。</td>
+                <td>在没有语义约定时混用 <code>undefined</code>、<code>null</code> 和空字符串。</td>
+                <td>统一空值语义能减少表单、存储和接口转换错误。</td>
+              </tr>
+              <tr>
+                <td>ISO 时间字符串</td>
+                <td>持久化和传输时使用稳定、可序列化的格式；展示时再本地化格式化。</td>
+                <td>直接保存“昨天”或本地化显示文本。</td>
+                <td>存储格式和展示格式应该分离。</td>
+              </tr>
+              <tr>
+                <td>文件引用</td>
+                <td>业务记录保存照片路径或标识符，照片内容交给 Filesystem。</td>
+                <td>把 Base64 图片塞进 Preferences。</td>
+                <td>元数据与大文件分开，便于性能、清理和迁移。</td>
+              </tr>
+              <tr>
+                <td>静态类型边界</td>
+                <td>TypeScript 不会自动验证接口或本地存储里的运行时 JSON。</td>
+                <td>以为 <code>axios.get&lt;Device[]&gt;</code> 会验证服务端数据。</td>
+                <td>泛型提供静态提示；不可信数据仍需运行时保护。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="two-column" style="margin-top: 1rem">
+          <article class="callout callout--amber">
+            <h3>设计类型时重点注意</h3>
+            <ul>
+              <li>不要先想页面控件，先想业务事实。</li>
+              <li>不要把所有字段都写成可选，避免把问题推给运行时。</li>
+              <li>不要为了“复用”强行让草稿和正式记录共用一个宽松接口。</li>
+              <li>不要在业务类型里直接塞 Capacitor 插件返回的完整对象。</li>
+              <li>每个状态值都应该能用一句中文解释。</li>
+            </ul>
+          </article>
+          <article class="callout callout--green">
+            <h3>你应该能够讲出的设计理由</h3>
+            <ul>
+              <li>为什么结果不是 <code>boolean</code>。</li>
+              <li>为什么草稿和已提交记录的必填字段不同。</li>
+              <li>为什么日期存 ISO 字符串而不是直接存 <code>Date</code>。</li>
+              <li>为什么照片不存 Base64 到 Preferences。</li>
+              <li>为什么 ID 和提交时间不应该由模板层随意生成。</li>
+            </ul>
+          </article>
+        </div>
+
+        <article class="card card--padded" style="margin-top: 1rem">
+          <h3 style="margin-top: 0">本模块可能出现的 5 个面试问题</h3>
+          <ol class="question-list">
+            <li>为什么巡检结果使用联合类型，而不是普通字符串或布尔值？</li>
+            <li><code>interface</code> 和 <code>type</code> 在这个项目里分别适合表达什么？</li>
+            <li>为什么编辑中的表单模型和已经持久化的巡检记录不应该完全相同？</li>
+            <li>TypeScript 已经声明了接口类型，为什么从 Preferences 读取 JSON 时仍可能不安全？</li>
+            <li>为什么巡检记录只保存照片文件引用，而不直接保存 Base64 图片？</li>
+          </ol>
+        </article>
+
+        <article class="callout callout--blue" style="margin-top: 1rem">
+          <h3>“用自己的话解释”练习题</h3>
+          <p>
+            假设面试官问：“为什么不直接创建一个所有字段都可选的 <code>Inspection</code>
+            接口，让表单和历史记录都使用它？”请你用 1～2 分钟回答。回答时至少涉及：业务约束、编译期保障、提交边界和后续维护。
+          </p>
+          <p><strong>先不要找标准答案。</strong>完成类型设计后，把你的回答发给导师，再针对错误或遗漏纠正。</p>
+        </article>
+      </section>
+
+      <section class="section" id="architecture" aria-labelledby="architecture-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="architecture-title">关键架构决策：数据怎么存</h2>
+            <p>核心不是“把插件都用一遍”，而是让每种工具承担适合自己的职责。</p>
+          </div>
+        </div>
+
+        <div class="decision-grid">
+          <article class="decision-card">
+            <h3>方案 A：全部存 Preferences</h3>
+            <span class="pill">实现最快</span>
+            <h4>优点</h4>
+            <ul>
+              <li>API 简单</li>
+              <li>初期代码少</li>
+              <li>容易快速跑通</li>
+            </ul>
+            <h4>问题</h4>
+            <ul>
+              <li>不适合存储大体积照片</li>
+              <li>Base64 增加体积和解析成本</li>
+              <li>职责混乱，难以解释为合理设计</li>
+            </ul>
+            <p><strong>结论：不推荐。</strong></p>
+          </article>
+
+          <article class="decision-card decision-card--recommended">
+            <span class="recommended-label">本项目推荐</span>
+            <h3>方案 B：元数据与文件分离</h3>
+            <span class="pill">平衡实现与质量</span>
+            <h4>Preferences</h4>
+            <ul>
+              <li>巡检记录元数据</li>
+              <li>用户设置</li>
+              <li>数据版本号</li>
+            </ul>
+            <h4>Filesystem</h4>
+            <ul>
+              <li>巡检照片</li>
+              <li>文件生命周期管理</li>
+              <li>删除记录时同步清理</li>
+            </ul>
+            <p><strong>结论：五天项目的最佳选择。</strong></p>
+          </article>
+
+          <article class="decision-card">
+            <h3>方案 C：SQLite + Filesystem</h3>
+            <span class="pill">扩展能力最强</span>
+            <h4>优点</h4>
+            <ul>
+              <li>适合复杂查询和大量记录</li>
+              <li>支持索引、分页和关系数据</li>
+              <li>更容易扩展大型业务</li>
+            </ul>
+            <h4>问题</h4>
+            <ul>
+              <li>增加插件与 Android 调试成本</li>
+              <li>五天内投入产出比低</li>
+              <li>需要解释更多数据库细节</li>
+            </ul>
+            <p><strong>结论：放入未来改进，不在本期实现。</strong></p>
+          </article>
+        </div>
+
+        <article class="card card--padded" style="margin-top: 1rem">
+          <h3 style="margin-top: 0">推荐职责链</h3>
+          <div class="architecture-flow" aria-label="应用分层架构">
+            <div class="architecture-node">
+              <span><strong>Vue 页面</strong><small>展示与用户交互</small></span>
+            </div>
+            <div class="architecture-node">
+              <span><strong>Composable / Pinia</strong><small>会话状态与业务动作</small></span>
+            </div>
+            <div class="architecture-node">
+              <span><strong>Service</strong><small>业务和平台能力边界</small></span>
+            </div>
+            <div class="architecture-node">
+              <span><strong>Capacitor Plugins</strong><small>Camera / Network 等</small></span>
+            </div>
+            <div class="architecture-node">
+              <span><strong>Android</strong><small>权限与系统能力</small></span>
+            </div>
+          </div>
+
+          <div class="two-column" style="margin-top: 1rem">
+            <div class="mini-card">
+              <h4>数据职责</h4>
+              <ul class="clean-list">
+                <li><strong>Pinia：</strong>当前内存状态</li>
+                <li><strong>Preferences：</strong>轻量持久化数据</li>
+                <li><strong>Filesystem：</strong>照片等文件</li>
+                <li><strong>Axios：</strong>远程请求</li>
+              </ul>
+            </div>
+            <div class="mini-card">
+              <h4>原生能力职责</h4>
+              <ul class="clean-list">
+                <li><strong>cameraService：</strong>拍照与权限结果转换</li>
+                <li><strong>fileService：</strong>保存、读取和清理照片</li>
+                <li><strong>networkService：</strong>网络查询与监听</li>
+                <li><strong>notificationService：</strong>通知权限和调度</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="section" id="roadmap" aria-labelledby="roadmap-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="roadmap-title">五天开发路线</h2>
+            <p>每一天围绕一个可以演示的结果组织，不追求无关功能数量。</p>
+          </div>
+        </div>
+
+        <div class="timeline">
+          <article class="day">
+            <div class="day__label">Day 1</div>
+            <div>
+              <h3>领域模型与核心 Web 流程</h3>
+              <p>设计巡检类型，建立创建巡检任务的最小业务闭环。</p>
+              <ul>
+                <li>稳定设备列表和详情</li>
+                <li>定义巡检草稿与巡检记录</li>
+                <li>创建巡检任务页面和基础校验</li>
+                <li>提交后形成内存中的巡检记录</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day__label">Day 2</div>
+            <div>
+              <h3>Preferences 与巡检历史</h3>
+              <p>让业务数据在应用重启后仍然存在，并完成历史浏览。</p>
+              <ul>
+                <li>持久化巡检记录元数据</li>
+                <li>应用启动时恢复本地数据</li>
+                <li>巡检历史列表和详情</li>
+                <li>处理 JSON 损坏和数据版本</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day__label">Day 3</div>
+            <div>
+              <h3>Camera、Filesystem 与 Android 权限</h3>
+              <p>拍摄现场照片，持久化到文件系统，并在真机完成验证。</p>
+              <ul>
+                <li>Camera 拍照</li>
+                <li>Filesystem 保存与读取</li>
+                <li>业务记录保存文件引用</li>
+                <li>处理取消、拒绝权限和写入失败</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day__label">Day 4</div>
+            <div>
+              <h3>Device、Network 与 Local Notifications</h3>
+              <p>补全系统能力展示、离线反馈和本地提醒。</p>
+              <ul>
+                <li>终端与系统信息页面</li>
+                <li>监听网络状态变化</li>
+                <li>离线时继续浏览本地记录</li>
+                <li>通知权限与任务提醒</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day__label">Day 5</div>
+            <div>
+              <h3>真机调试、Release 打包和面试材料</h3>
+              <p>从“开发完成”走到“可以安装、可以展示、可以讲解”。</p>
+              <ul>
+                <li>Android Studio 与真机调试</li>
+                <li>Manifest 权限和生命周期检查</li>
+                <li>Release keystore、APK 和 AAB</li>
+                <li>README、架构图和面试演示脚本</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="review" aria-labelledby="review-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="review-title">当前项目基线审查</h2>
+            <p>当前生产构建已经通过，但仍是 Vue Web App，还没有成为 Capacitor Hybrid App。</p>
+          </div>
+        </div>
+
+        <div class="two-column" style="margin-bottom: 1rem">
+          <article class="callout callout--green">
+            <h3>当前已经具备</h3>
+            <ul>
+              <li>Vue 3、TypeScript、Vite</li>
+              <li>Pinia 和 Vue Router</li>
+              <li>设备类型、Mock Service 和 Store</li>
+              <li>设备列表与设备详情</li>
+              <li>基础 loading 和 error 状态</li>
+              <li><code>pnpm build</code> 构建通过</li>
+              <li>目前没有发现 <code>any</code></li>
+            </ul>
+          </article>
+          <article class="callout callout--red">
+            <h3>当前尚未具备</h3>
+            <ul>
+              <li>Axios 与远程请求边界</li>
+              <li>Capacitor 和 Android 原生工程</li>
+              <li>Camera、Filesystem、Preferences</li>
+              <li>Device、Network、Local Notifications</li>
+              <li>Android 权限处理和真机调试</li>
+              <li>APK/AAB Release 签名</li>
+              <li>适合求职展示的 README</li>
+            </ul>
+          </article>
+        </div>
+
+        <details class="review" open>
+          <summary>1. 架构审查</summary>
+          <div class="review__body">
+            <h4>做得正确的方向</h4>
+            <p>
+              当前已经形成 <code>View → Pinia Store → Service → Mock 数据</code>
+              的基础调用链，后续应该保留这个方向。原生能力也应采用页面、Composable/Store、Service、Capacitor Plugin 的分层。
+            </p>
+            <h4>主要问题</h4>
+            <ul>
+              <li>设备数据源仍硬编码在 Service 内，数据访问边界还不能方便替换。</li>
+              <li>缺少最核心的巡检领域模型和持久化策略。</li>
+              <li>尚未区分业务元数据和原生文件。</li>
+              <li>还没有统一处理 Web 与 Android 的环境差异。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="review">
+          <summary>2. TypeScript 审查</summary>
+          <div class="review__body">
+            <h4>做得较好</h4>
+            <ul>
+              <li><code>DeviceStatus</code> 使用联合类型。</li>
+              <li>状态标签使用 <code>Record&lt;DeviceStatus, string&gt;</code> 保证映射完整。</li>
+              <li>异常捕获使用 <code>unknown</code>，没有无脑使用 <code>any</code>。</li>
+              <li>异步函数声明了明确返回类型。</li>
+            </ul>
+            <h4>后续关注</h4>
+            <ul>
+              <li>约定日期字段必须是 ISO 8601 字符串。</li>
+              <li>区分“不存在”和“请求失败”等不同错误语义。</li>
+              <li>理解 TypeScript 不会自动验证外部 JSON。</li>
+              <li>本地持久化数据要考虑版本和损坏恢复。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="review">
+          <summary>3. Vue 使用审查</summary>
+          <div class="review__body">
+            <h4>做得较好</h4>
+            <ul>
+              <li>使用 <code>&lt;script setup lang="ts"&gt;</code> 和 Composition API。</li>
+              <li>使用 <code>storeToRefs()</code> 保持 Pinia 状态响应性。</li>
+              <li>路由参数通过 props 传入详情页。</li>
+              <li>列表使用稳定的设备 ID 作为 key。</li>
+            </ul>
+            <h4>后续关注</h4>
+            <ul>
+              <li>日期格式化逻辑已经在列表和详情重复，历史模块加入前应提取。</li>
+              <li>设备状态徽章的模板与 CSS 重复，可在合适时机提取小组件。</li>
+              <li>列表还缺空状态、重试和无网络提示。</li>
+              <li>详情加载需要考虑路由快速切换时的异步请求竞态。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="review">
+          <summary>4. 状态管理审查</summary>
+          <div class="review__body">
+            <ul>
+              <li>列表和详情分别拥有 loading/error，比一个全局 loading 更合理。</li>
+              <li><code>devices</code> 与 <code>currentDevice</code> 可能形成两份数据来源，需要避免更新不同步。</li>
+              <li>网络、本地缓存和离线降级加入后，不应把所有策略都堆进 Store。</li>
+              <li>Store 负责响应式业务状态；Service 负责数据访问和平台能力边界。</li>
+              <li>详情请求需要防止旧请求晚返回后覆盖新页面状态。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="review">
+          <summary>5. 异常处理审查</summary>
+          <div class="review__body">
+            <p>现有的 <code>err instanceof Error</code> 是正确起点，但原生模块会增加很多可区分场景：</p>
+            <ul>
+              <li>用户主动取消拍照</li>
+              <li>首次拒绝权限或永久拒绝权限</li>
+              <li>文件写入失败或历史文件已经不存在</li>
+              <li>Preferences JSON 损坏</li>
+              <li>网络断开</li>
+              <li>Android 13+ 通知权限未授予</li>
+            </ul>
+            <p>这些情况不能全部显示成“操作失败”。我们会随模块逐步建立轻量错误语义，不提前搭建复杂框架。</p>
+          </div>
+        </details>
+
+        <details class="review">
+          <summary>6. 可维护性审查</summary>
+          <div class="review__body">
+            <ul>
+              <li>README 仍是 Vite 模板内容，最终需要改成求职项目文档。</li>
+              <li>日期和状态样式已有少量重复，但暂时不需要过度抽象。</li>
+              <li>Mock 数据和 Service 实现在同一文件，切换数据源前再拆分。</li>
+              <li>尚无 ESLint、测试、环境变量约定和目录职责说明。</li>
+              <li>优先级应是：核心流程 → 原生能力 → 权限异常 → 真机 → Release → 文档。</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <section class="section" aria-labelledby="method-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="method-title">以后每个小任务的固定节奏</h2>
+            <p>这份节奏帮助你把“做出来”转化为“真正掌握”。</p>
+          </div>
+        </div>
+        <div class="three-column">
+          <article class="mini-card">
+            <span class="pill">编码前</span>
+            <h3>先理解设计</h3>
+            <ol>
+              <li>说明要解决的问题。</li>
+              <li>给出 2～3 个关键方案。</li>
+              <li>解释推荐方案和取舍。</li>
+              <li>列出会修改的文件。</li>
+            </ol>
+          </article>
+          <article class="mini-card">
+            <span class="pill">编码后</span>
+            <h3>自己验证结果</h3>
+            <ol>
+              <li>运行类型检查和构建。</li>
+              <li>按给出的步骤手动验证。</li>
+              <li>主动测试错误和空状态。</li>
+              <li>记录暂未解决的限制。</li>
+            </ol>
+          </article>
+          <article class="mini-card">
+            <span class="pill">学习后</span>
+            <h3>转化为表达能力</h3>
+            <ol>
+              <li>复述当天知识点。</li>
+              <li>解释关键代码。</li>
+              <li>回答 5 个面试问题。</li>
+              <li>完成“自己的话解释”练习。</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p><strong>现在的行动口令：</strong>完成上面的准备清单，然后回复“开始 Day 1 Task 2”。</p>
+        <p>下一步只设计巡检领域模型，不提前进入页面、插件或 Android。</p>
+      </footer>
+    </main>
+
+    <script>
+      const storageKey = 'device-inspector-learning-guide-checks'
+      const checkboxes = Array.from(document.querySelectorAll('[data-check-id]'))
+      const progressBar = document.querySelector('#progress-bar')
+      const progressLabel = document.querySelector('#progress-label')
+      const printButton = document.querySelector('#print-page')
+
+      function readSavedChecks() {
+        try {
+          const rawValue = window.localStorage.getItem(storageKey)
+          return rawValue ? JSON.parse(rawValue) : {}
+        } catch {
+          return {}
+        }
+      }
+
+      function updateProgress() {
+        const completed = checkboxes.filter((checkbox) => checkbox.checked).length
+        const total = checkboxes.length
+        const percentage = total === 0 ? 0 : Math.round((completed / total) * 100)
+
+        if (progressBar) {
+          progressBar.style.width = `${percentage}%`
+        }
+
+        if (progressLabel) {
+          progressLabel.textContent = `${completed} / ${total}`
+        }
+      }
+
+      function saveChecks() {
+        const nextState = Object.fromEntries(
+          checkboxes.map((checkbox) => [checkbox.dataset.checkId, checkbox.checked]),
+        )
+
+        try {
+          window.localStorage.setItem(storageKey, JSON.stringify(nextState))
+        } catch {
+          // 即使浏览器禁用了 localStorage，清单仍然可以在当前页面正常使用。
+        }
+      }
+
+      const savedChecks = readSavedChecks()
+
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = Boolean(savedChecks[checkbox.dataset.checkId])
+        checkbox.addEventListener('change', () => {
+          saveChecks()
+          updateProgress()
+        })
+      })
+
+      printButton?.addEventListener('click', () => window.print())
+      updateProgress()
+    </script>
+  </body>
+</html>

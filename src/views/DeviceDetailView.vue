@@ -74,9 +74,12 @@ function statusClass(status: DeviceStatus): string {
         </div>
       </dl>
 
-      <button class="primary-action" type="button" disabled>
-        开始巡检（Day 2 实现）
-      </button>
+      <RouterLink
+        class="primary-action"
+        :to="{ name: 'inspection-create', params: { id: currentDevice.id } }"
+      >
+        开始巡检
+      </RouterLink>
     </section>
   </div>
 </template>
@@ -188,6 +191,7 @@ dd {
 }
 
 .primary-action {
+  display: block;
   width: 100%;
   padding: 0.75rem 1rem;
   border: none;
@@ -196,10 +200,7 @@ dd {
   color: #fff;
   font-size: 0.875rem;
   font-weight: 500;
-}
-
-.primary-action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  text-align: center;
+  text-decoration: none;
 }
 </style>
