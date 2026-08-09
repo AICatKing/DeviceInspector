@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Device Inspector｜阶段性面试总结</title>
+    <style>
+      :root { color-scheme: light; --ink:#172033; --muted:#5d6b82; --line:#dce4ef; --paper:#fff; --page:#f2f6fb; --blue:#185adb; --blue-soft:#eaf2ff; --green:#087e5b; --green-soft:#e8f7f0; --amber:#a75a00; --amber-soft:#fff4dd; --code:#10203a; }
+      * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+      body { margin:0; background:var(--page); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; line-height:1.72; }
+      .shell { max-width:1160px; margin:0 auto; padding:34px 22px 68px; }
+      .hero { padding:46px; color:#fff; border-radius:24px; background:linear-gradient(135deg,#102d62 0%,#185adb 57%,#0a8c86 100%); box-shadow:0 22px 48px rgba(22,55,110,.25); }
+      .eyebrow { display:inline-block; padding:4px 10px; border:1px solid rgba(255,255,255,.36); border-radius:999px; color:#dceaff; font-size:.82rem; font-weight:700; letter-spacing:.08em; }
+      h1 { margin:16px 0 8px; font-size:clamp(2rem,5vw,3.5rem); line-height:1.15; } h2 { margin:0 0 16px; font-size:1.45rem; line-height:1.35; } h3 { margin:22px 0 10px; font-size:1.08rem; } p { margin:9px 0; }
+      .subtitle { max-width:760px; margin:0; color:#e3efff; font-size:1.08rem; } .meta { margin-top:22px; color:#d5e6ff; font-size:.92rem; }
+      .toc { display:flex; flex-wrap:wrap; gap:8px; margin:24px 0; } .toc a { padding:7px 12px; border:1px solid var(--line); border-radius:999px; background:var(--paper); color:var(--blue); text-decoration:none; font-size:.9rem; font-weight:650; }
+      section { margin-top:22px; padding:30px; border:1px solid var(--line); border-radius:18px; background:var(--paper); box-shadow:0 7px 24px rgba(31,54,88,.05); }
+      .lead { color:var(--muted); font-size:1.02rem; } .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; } .grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+      .card { padding:18px; border:1px solid var(--line); border-radius:14px; background:#fbfdff; } .card h3 { margin-top:0; } .card p:last-child { margin-bottom:0; }
+      .tag { display:inline-block; padding:3px 9px; border-radius:999px; font-size:.78rem; font-weight:750; } .done { color:var(--green); background:var(--green-soft); } .pending { color:var(--amber); background:var(--amber-soft); } .accent { color:var(--blue); background:var(--blue-soft); }
+      table { width:100%; border-collapse:collapse; font-size:.95rem; } th,td { padding:12px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; } th { color:#3d4c65; background:#f7faff; font-size:.86rem; } tr:last-child td { border-bottom:0; }
+      ul,ol { padding-left:1.25em; } li + li { margin-top:7px; }
+      .quote { margin:16px 0; padding:17px 19px; border-left:4px solid var(--blue); border-radius:0 12px 12px 0; background:var(--blue-soft); color:#233c69; }
+      pre { overflow-x:auto; margin:14px 0; padding:18px; border-radius:13px; background:var(--code); color:#e7f0ff; font:.87rem/1.62 "SFMono-Regular",Consolas,"Liberation Mono",monospace; white-space:pre-wrap; }
+      code { font-family:"SFMono-Regular",Consolas,monospace; font-size:.9em; } .flow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:16px 0; } .node { padding:8px 11px; border:1px solid #b9d0f7; border-radius:9px; background:#f4f8ff; color:#24477e; font-weight:650; font-size:.9rem; } .arrow { color:var(--blue); font-weight:800; } .small { color:var(--muted); font-size:.9rem; } .warning { padding:16px 18px; border:1px solid #f0d28c; border-radius:12px; background:#fff9eb; color:#71531d; }
+      @media (max-width:760px) { .shell { padding:18px 14px 42px; } .hero,section { padding:23px 19px; } .grid,.grid-3 { grid-template-columns:1fr; } table { display:block; overflow-x:auto; white-space:nowrap; } }
+      @media print { body { background:#fff; } .shell { max-width:none; padding:0; } .hero { box-shadow:none; } section { break-inside:avoid; box-shadow:none; } .toc { display:none; } }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <span class="eyebrow">Vue 3 · TypeScript · Capacitor · Android</span>
+        <h1>Device Inspector<br />设备巡检助手</h1>
+        <p class="subtitle">阶段性面试总结（Day 1～Day 3）：一个以 Android 真机为目标的 Hybrid 巡检应用，重点展示类型安全、端侧持久化、原生相机与文件生命周期管理。</p>
+        <p class="meta">项目 App ID：<code>com.hugh.deviceinspector</code> · 当前阶段：Day 3 Task 4 已完成，Day 4 待开始</p>
+      </header>
+      <nav class="toc" aria-label="目录">
+        <a href="#pitch">30 秒介绍</a><a href="#status">完成状态</a><a href="#architecture">架构与数据流</a><a href="#modules">模块证据</a><a href="#questions">高频追问</a><a href="#demo">真机演示</a><a href="#boundary">当前边界</a><a href="#next">下一步</a>
+      </nav>
+      <section id="pitch">
+        <h2>一、30 秒项目介绍</h2>
+        <div class="quote">我独立实现了一个面向现场设备巡检的 Android Hybrid App。前端使用 Vue 3、TypeScript、Pinia 和 Vue Router，端侧通过 Capacitor 接入系统相机、私有文件存储和 Preferences。本项目的核心不是只拍一张照片，而是把临时相机照片复制到 App 私有目录，并把其持久路径与类型安全的巡检记录一起保存；应用冷启动后，历史记录和照片文件仍然存在。我还处理了提交过程中的并发操作、保存失败后的文件补偿删除，以及 Android 真机构建、安装和调试。</div>
+        <div class="grid-3">
+          <article class="card"><span class="tag accent">业务价值</span><h3>可追溯的巡检闭环</h3><p>从设备详情创建巡检，填写结果与备注，附加现场照片，在历史中按设备和时间回看记录。</p></article>
+          <article class="card"><span class="tag accent">工程价值</span><h3>分层而非堆 API</h3><p>Vue 页面负责交互；Composable 组织页面逻辑；Service 隔离 Capacitor 插件调用与持久化细节。</p></article>
+          <article class="card"><span class="tag accent">原生价值</span><h3>真机可验证</h3><p>已在 Android 10 华为真机上验证相机、文件、Preferences、冷启动恢复和 APK 覆盖安装。</p></article>
+        </div>
+      </section>
+      <section id="status">
+        <h2>二、当前完成状态：已经能演示什么</h2>
+        <p class="lead">以下状态以代码与真实 Android 设备验证为准。未完成项明确保留，不把规划说成已实现。</p>
+        <table><thead><tr><th>能力</th><th>状态</th><th>可在面试中展示或说明的证据</th></tr></thead><tbody>
+          <tr><td>设备列表、设备详情</td><td><span class="tag done">已完成</span></td><td>设备服务、Pinia 状态、路由参数与详情跳转。</td></tr>
+          <tr><td>类型安全巡检表单</td><td><span class="tag done">已完成</span></td><td><code>InspectionDraft</code> 与 <code>InspectionRecord</code> 分离，表单校验后才允许形成记录。</td></tr>
+          <tr><td>巡检历史</td><td><span class="tag done">已完成</span></td><td>展示空状态、巡检结果、关联设备、时间、备注和照片数量。</td></tr>
+          <tr><td>Pinia + Preferences</td><td><span class="tag done">已完成 · 真机验证</span></td><td>重启进程后重新读取历史；损坏 JSON 与写入失败都有处理。</td></tr>
+          <tr><td>Camera 原生相机</td><td><span class="tag done">已完成 · 真机验证</span></td><td>调起 Android 系统相机，WebView 内预览临时照片；取消操作不会被视作错误。</td></tr>
+          <tr><td>Filesystem 照片持久化</td><td><span class="tag done">已完成 · 真机验证</span></td><td>照片由临时 URI 拷贝至 <code>Directory.Data/inspection-photos</code>，冷启动后仍存在。</td></tr>
+          <tr><td>Android Debug 构建与真机调试</td><td><span class="tag done">已完成</span></td><td>已生成、安装、冷启动 Debug APK；用 ADB 验证包更新时间与应用状态。</td></tr>
+          <tr><td>Device / Network / Local Notifications</td><td><span class="tag pending">待 Day 4</span></td><td>下一阶段接入并进行真机验证。</td></tr>
+          <tr><td>Release APK/AAB 签名</td><td><span class="tag pending">待 Day 5</span></td><td>将补齐签名、Release 构建和安装验证闭环。</td></tr>
+        </tbody></table>
+      </section>
+      <section id="architecture">
+        <h2>三、架构：如何从页面走到原生能力</h2>
+        <p>项目采用“页面 / Composable / Service / Capacitor Plugin”的分层。这样页面不直接了解 Android URI、插件选项或文件路径策略，后续替换实现和定位问题都更容易。</p>
+        <div class="flow" aria-label="架构流向"><span class="node">Vue View</span><span class="arrow">→</span><span class="node">Composable</span><span class="arrow">→</span><span class="node">Domain / Storage Service</span><span class="arrow">→</span><span class="node">Capacitor Plugin</span><span class="arrow">→</span><span class="node">Android 系统能力</span></div>
+        <div class="grid">
+          <article class="card"><h3>领域层</h3><p><code>InspectionDraft</code> 表示尚未提交的表单状态；<code>InspectionRecord</code> 是合法、可保存的巡检历史实体，包含 ID、创建时间与持久照片路径。</p></article>
+          <article class="card"><h3>状态与存储层</h3><p>Pinia 提供当前进程内的响应式列表；Preferences 保存版本化 JSON 载荷。写入成功后才更新 Pinia，避免 UI 出现“假成功”。</p></article>
+        </div>
+        <h3>一次带照片的巡检提交数据流</h3>
+        <pre>设备详情页 → 巡检表单（InspectionDraft） → Camera.takePhoto() 取得临时照片 → 预览 temporaryPhotos（仅内存、临时 URI） → 提交开始时复制 photosToPersist 快照 → Filesystem.copy() 到 Directory.Data/inspection-photos/ → 创建 InspectionRecord（photoPaths 使用 durable file:// URI） → Preferences 持久化成功 → Pinia 更新，巡检历史响应式展示</pre>
+      </section>
+      <section id="modules">
+        <h2>四、模块拆解：面试可讲的关键决策</h2>
+        <div class="grid">
+          <article class="card"><span class="tag done">Day 1</span><h3>类型安全的巡检领域模型</h3><p><strong>问题：</strong>表单输入未必合法，不应直接当成历史记录保存。</p><p><strong>决策：</strong>用不同类型区分草稿和最终记录，在 Service 边界创建 UUID、ISO 时间和合法记录。</p><p><strong>可讲价值：</strong>类型建模、提交边界、避免让页面随意拼装持久化实体。</p></article>
+          <article class="card"><span class="tag done">Day 2</span><h3>Preferences 的可靠持久化</h3><p><strong>问题：</strong>本地 JSON 可能为空、损坏，写入也可能失败。</p><p><strong>决策：</strong>以 <code>unknown</code> 接收解析结果并进行运行时校验；使用版本化载荷 <code>{ version, records }</code>。</p><p><strong>可讲价值：</strong>TypeScript 只能约束编译期，外部数据仍必须在运行时验证。</p></article>
+          <article class="card"><span class="tag done">Day 3 Task 3</span><h3>相机临时态与取消语义</h3><p><strong>问题：</strong>相机返回的是临时资源，用户取消拍摄不是系统异常。</p><p><strong>决策：</strong>通过 Camera Service 与 Composable 隔离插件；以 <code>{ status: 'cancelled' }</code> 建模取消，而不是抛出错误。</p><p><strong>可讲价值：</strong>正常用户分支与真正错误分支分开处理，页面逻辑更清晰。</p></article>
+          <article class="card"><span class="tag done">Day 3 Task 4</span><h3>临时照片变为持久资产</h3><p><strong>问题：</strong>相机缓存可能被系统清理，不能把临时路径直接持久化。</p><p><strong>决策：</strong>拷贝到 App 私有的 <code>Directory.Data</code>，记录中只保存 durable <code>file://</code> URI。</p><p><strong>可讲价值：</strong>理解缓存、私有存储、持久化路径与 Android 权限边界。</p></article>
+          <article class="card"><span class="tag done">Code Review Follow-up</span><h3>提交期间的一致性</h3><p><strong>问题：</strong>异步保存中仍修改照片列表，可能让本次提交输入不稳定。</p><p><strong>决策：</strong>提交开始复制 <code>photosToPersist</code>；保存照片和记录阶段禁用拍照与移除。</p><p><strong>可讲价值：</strong>UI 锁定解决交互，数据快照定义异步任务输入，两者缺一不可。</p></article>
+          <article class="card"><span class="tag done">Android 真机</span><h3>从 Web 构建到真实设备</h3><p><strong>问题：</strong>浏览器能跑不代表 Android 能构建、安装和持久化。</p><p><strong>决策：</strong>通过 Capacitor sync、Gradle Debug 构建、ADB 安装、强制停止冷启动完成验证。</p><p><strong>可讲价值：</strong>真实遇到 JDK 兼容问题，最终固定使用 JDK 21 构建。</p></article>
+        </div>
+      </section>
+      <section id="questions">
+        <h2>五、核心追问：建议的回答结构</h2>
+        <h3>1. 为什么不直接将相机返回的路径保存到 Preferences？</h3><p>相机返回的路径可能指向缓存目录，缓存资源会被系统清理，应用重启后也不应假设一定存在。因此我把它当作临时态：预览时使用 <code>webPath</code>，提交时通过 Filesystem 拷贝到 App 私有 <code>Directory.Data</code>，最终记录保存的是可长期使用的 <code>file://</code> URI。</p>
+        <h3>2. 为什么 Pinia 和 Preferences 都需要？</h3><p>Pinia 负责当前运行进程的响应式 UI 状态；Preferences 负责 App 退出或被杀后仍可恢复的数据。两者职责不同。写入 Preferences 成功后再更新 Pinia，能避免持久化失败却先在 UI 中显示成功。</p>
+        <h3>3. Filesystem 文件写成功、Preferences 写失败时如何处理？</h3><p>当前实现是补偿式一致性：先复制临时照片，再尝试保存巡检记录；如果记录创建或 Preferences 保存失败，就删除本次刚复制出的文件。它不是数据库事务；如果进程在两步之间被系统杀死，仍可能出现孤儿文件。后续可加启动时清理或暂存目录加提交标记。</p>
+        <h3>4. 为什么相机不需要在页面里直接申请 CAMERA 权限？</h3><p>当前配置通过 Capacitor 打开系统相机 Activity，且 <code>saveToGallery: false</code>。应用没有直接访问公共相册或自行接管相机硬件，因此本方案不需要页面中直接处理 <code>CAMERA</code> 或外部存储权限。未来接入媒体库、公开相册或通知功能时，会按对应插件和 Android 版本处理权限。</p>
+        <h3>5. 为什么只禁用按钮还不够？</h3><p>按钮禁用是 UI 层防护，避免用户继续操作；异步任务则应在开始时拥有明确、稳定的业务输入。因此还要复制 <code>const photosToPersist = [...temporaryPhotos.value]</code>。后续文件保存依赖这份快照，而不是依赖可能变化的响应式数组。</p>
+      </section>
+      <section id="demo">
+        <h2>六、3 分钟真机演示脚本</h2>
+        <ol><li><strong>开场（20 秒）：</strong>展示设备列表，说明这是离线优先的现场巡检 App，巡检记录和照片都存储在端侧。</li><li><strong>业务流（40 秒）：</strong>进入设备详情，发起巡检，选择结果、填写备注，说明草稿与正式记录在类型上分离。</li><li><strong>原生能力（50 秒）：</strong>点击拍照，展示 Android 系统相机；拍摄后回到 WebView 查看预览。说明此时是临时照片，尚未进入持久化历史。</li><li><strong>持久化（40 秒）：</strong>提交巡检，观察“保存照片 / 保存记录”状态。说明临时照片会复制到 App 私有目录，成功后记录写入 Preferences。</li><li><strong>恢复证明（30 秒）：</strong>进入历史查看新记录和照片数量；关闭并重新打开应用，证明记录仍然存在。</li><li><strong>工程追问（20 秒）：</strong>主动补充：提交阶段禁用拍照、移除，且对照片做快照；保存失败时会补偿删除本次新复制的文件。</li></ol>
+        <p class="small">演示时不要试图展示所有功能；优先让面试官看到“拍照 → 私有文件持久化 → 冷启动恢复”这个最有辨识度的完整闭环。</p>
+      </section>
+      <section id="boundary">
+        <h2>七、当前边界与诚实说明</h2>
+        <div class="warning"><strong>项目当前可用于展示，但还没有完成最初范围中的全部 Capacitor 能力。</strong> 面试中应明确说“已完成端侧巡检闭环，Device、Network、通知与 Release 签名正在后续迭代”，而不是声称它们已经上线。</div>
+        <ul><li><strong>尚未接入：</strong>Capacitor Device、Network、Local Notifications、Release APK/AAB 签名。</li><li><strong>已知技术债：</strong>若照片复制完成但 Preferences 写入前进程被杀，可能产生孤儿文件；现有补偿删除只能覆盖可捕获的失败。</li><li><strong>展示边界：</strong>历史列表目前显示照片数量，尚未做持久照片缩略图墙。</li><li><strong>网络层：</strong>设备数据目前由有模拟延迟的 Service 提供，未为了技术栈清单而强行引入 Axios。后续有真实同步接口时，再有意义地接入请求层、超时、拦截器和离线队列。</li></ul>
+      </section>
+      <section id="next">
+        <h2>八、下一阶段：Day 4 · Task 1</h2>
+        <p><span class="tag pending">即将开始</span> 接入 Capacitor <strong>Device</strong> 与 <strong>Network</strong>，并继续保持 Service / Composable / View 分层。</p>
+        <div class="grid"><article class="card"><h3>目标</h3><p>读取设备型号、操作系统、系统版本、应用版本等环境信息；读取并监听实时网络状态，并在页面中让用户可见。</p></article><article class="card"><h3>完成标准</h3><p>在 Android 真机上查看真实设备信息；切换 Wi-Fi / 移动网络或关闭网络后，确认状态变更能反映到页面。</p></article></div>
+        <p class="quote">本项目的目标不是功能数量，而是每个原生能力都有清晰分层、异常边界、真机验证和可面试解释的设计理由。</p>
+      </section>
+    </main>
+  </body>
+</html>

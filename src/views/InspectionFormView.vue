@@ -2,6 +2,7 @@
 import { reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInspectionCamera } from '../composables/useInspectionCamera'
+import { useInspectionNotification } from '../composables/useInspectionNotification'
 import {
   deletePersistedInspectionPhotos,
   persistTemporaryInspectionPhotos,
@@ -60,6 +61,13 @@ const {
   removePhoto,
   resetPhotos,
 } = useInspectionCamera()
+const {
+  notificationPending,
+  notificationMessage,
+  notificationError,
+  notifyInspectionSubmitted,
+  resetNotificationFeedback,
+} = useInspectionNotification()
 
 watch(
   () => props.id,
@@ -69,6 +77,7 @@ watch(
     savedRecord.value = null
     submitError.value = null
     resetPhotos()
+    resetNotificationFeedback()
     void deviceStore.loadDeviceById(nextId)
   },
   { immediate: true },
@@ -79,6 +88,7 @@ watch(
   () => {
     savedRecord.value = null
     submitError.value = null
+    resetNotificationFeedback()
   },
 )
 
@@ -99,12 +109,13 @@ async function handleSubmit(): Promise<void> {
 
   submitError.value = null
   let persistedPhotoPaths: string[] = []
+  const photosToPersist = [...temporaryPhotos.value]
 
   try {
-    if (temporaryPhotos.value.length > 0) {
+    if (photosToPersist.length > 0) {
       submissionStage.value = 'saving-photos'
       persistedPhotoPaths = await persistTemporaryInspectionPhotos(
-        temporaryPhotos.value,
+        photosToPersist,
       )
     }
 
@@ -131,6 +142,10 @@ async function handleSubmit(): Promise<void> {
     Object.assign(formErrors, createEmptyInspectionValidationErrors())
     savedRecord.value = submissionResult.record
     resetPhotos()
+    void notifyInspectionSubmitted({
+      record: submissionResult.record,
+      deviceName: currentDevice.value?.name ?? submissionResult.record.deviceId,
+    })
   } catch (error: unknown) {
     savedRecord.value = null
     submitError.value =
@@ -294,7 +309,11 @@ function retryLoadRecords(): void {
         </p>
       </div>
 
-      <section class="photo-section" aria-labelledby="photo-heading">
+      <section
+        class="photo-section"
+        aria-labelledby="photo-heading"
+        :aria-busy="submissionStage === 'saving-photos'"
+      >
         <div class="photo-section__header">
           <div>
             <h2 id="photo-heading">现场照片</h2>
@@ -308,7 +327,7 @@ function retryLoadRecords(): void {
         <button
           class="camera-action"
           type="button"
-          :disabled="!canCapture"
+          :disabled="submissionStage !== 'idle' || !canCapture"
           @click="capturePhoto"
         >
           {{
@@ -338,7 +357,11 @@ function retryLoadRecords(): void {
                 {{ photo.format.toUpperCase() }}
                 <template v-if="photo.resolution"> · {{ photo.resolution }}</template>
               </span>
-              <button type="button" @click="removePhoto(photo.id)">
+              <button
+                type="button"
+                :disabled="submissionStage !== 'idle'"
+                @click="removePhoto(photo.id)"
+              >
                 移除
               </button>
             </div>
@@ -382,6 +405,19 @@ function retryLoadRecords(): void {
           <strong>巡检记录已创建</strong>
           <p>
             记录已写入 Preferences 并同步到 Pinia，共保存 {{ savedRecord.photoPaths.length }} 张现场照片。
+          </p>
+          <p v-if="notificationPending" class="notification-feedback" role="status">
+            正在发送巡检完成通知...
+          </p>
+          <p v-else-if="notificationMessage" class="notification-feedback" role="status">
+            {{ notificationMessage }}
+          </p>
+          <p
+            v-else-if="notificationError"
+            class="notification-feedback notification-feedback--error"
+            role="alert"
+          >
+            {{ notificationError }}
           </p>
         </div>
         <dl>
@@ -795,6 +831,11 @@ textarea[aria-invalid='true'] {
   cursor: pointer;
 }
 
+.photo-card__meta button:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
 .primary-action {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -846,6 +887,16 @@ textarea[aria-invalid='true'] {
   margin: 0.25rem 0 0;
   color: #15803d;
   font-size: 0.75rem;
+}
+
+.notification-feedback {
+  margin-top: 0.5rem;
+  color: #047857;
+  font-size: 0.8125rem;
+}
+
+.notification-feedback--error {
+  color: #b45309;
 }
 
 .save-success dl {
