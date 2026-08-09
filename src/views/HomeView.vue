@@ -8,6 +8,7 @@ const appSubtitle = '设备巡检助手'
     <h1>{{ appName }}</h1>
     <p class="subtitle">{{ appSubtitle }}</p>
     <p class="status">项目骨架已就绪，Day 1 Task 1 完成。</p>
+    <RouterLink class="entry-link" to="/devices">进入设备列表 →</RouterLink>
   </main>
 </template>
 
@@ -36,5 +37,17 @@ h1 {
 .status {
   font-size: 0.875rem;
   color: #16a34a;
+  margin-bottom: 1.5rem;
+}
+
+.entry-link {
+  display: inline-block;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  background: #2563eb;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 </style>
