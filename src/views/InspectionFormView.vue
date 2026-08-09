@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import {
+  createEmptyInspectionValidationErrors,
+  type InspectionValidationErrors,
+} from '../services/inspectionService'
 import { useDeviceStore } from '../stores/deviceStore'
+import { useInspectionStore } from '../stores/inspectionStore'
 import {
   INSPECTION_RESULT_LABELS,
   type InspectionDraft,
+  type InspectionRecord,
   type InspectionResult,
 } from '../types/inspection'
 
 const props = defineProps<{
   id: string
 }>()
-
-interface InspectionFormErrors {
-  inspectorName: string | null
-  result: string | null
-  notes: string | null
-}
 
 const resultOptions: ReadonlyArray<{
   value: InspectionResult
@@ -28,17 +28,21 @@ const resultOptions: ReadonlyArray<{
 
 const deviceStore = useDeviceStore()
 const { currentDevice, detailLoading, detailError } = storeToRefs(deviceStore)
+const inspectionStore = useInspectionStore()
+const { recordCount } = storeToRefs(inspectionStore)
 
 const draft = reactive<InspectionDraft>(createDraft(props.id))
-const formErrors = reactive<InspectionFormErrors>(createEmptyErrors())
-const validationFeedback = ref<string | null>(null)
+const formErrors = reactive<InspectionValidationErrors>(
+  createEmptyInspectionValidationErrors(),
+)
+const savedRecord = ref<InspectionRecord | null>(null)
 
 watch(
   () => props.id,
   (nextId) => {
     Object.assign(draft, createDraft(nextId))
-    Object.assign(formErrors, createEmptyErrors())
-    validationFeedback.value = null
+    Object.assign(formErrors, createEmptyInspectionValidationErrors())
+    savedRecord.value = null
     void deviceStore.loadDeviceById(nextId)
   },
   { immediate: true },
@@ -47,7 +51,7 @@ watch(
 watch(
   () => [draft.inspectorName, draft.result, draft.notes],
   () => {
-    validationFeedback.value = null
+    savedRecord.value = null
   },
 )
 
@@ -61,39 +65,17 @@ function createDraft(deviceId: string): InspectionDraft {
   }
 }
 
-function createEmptyErrors(): InspectionFormErrors {
-  return {
-    inspectorName: null,
-    result: null,
-    notes: null,
-  }
-}
-
-function validateDraft(): boolean {
-  Object.assign(formErrors, createEmptyErrors())
-
-  if (!draft.inspectorName.trim()) {
-    formErrors.inspectorName = '请输入巡检人姓名'
-  }
-
-  if (draft.result === null) {
-    formErrors.result = '请选择巡检结果'
-  }
-
-  if (draft.result === 'issue_found' && !draft.notes.trim()) {
-    formErrors.notes = '发现问题时，请填写问题说明'
-  }
-
-  return Object.values(formErrors).every((message) => message === null)
-}
-
 function handleSubmit(): void {
-  if (!validateDraft()) {
-    validationFeedback.value = null
+  const creationResult = inspectionStore.submitInspection(draft)
+
+  if (!creationResult.success) {
+    Object.assign(formErrors, creationResult.errors)
+    savedRecord.value = null
     return
   }
 
-  validationFeedback.value = '表单校验通过。当前任务不会保存数据，下一步再创建正式巡检记录。'
+  Object.assign(formErrors, createEmptyInspectionValidationErrors())
+  savedRecord.value = creationResult.record
 }
 </script>
 
@@ -108,6 +90,7 @@ function handleSubmit(): void {
       </RouterLink>
       <h1>创建巡检</h1>
       <p>填写本次设备巡检信息</p>
+      <p class="session-summary">本次会话已保存 {{ recordCount }} 条巡检记录</p>
     </header>
 
     <p v-if="detailLoading" class="feedback">正在加载设备信息...</p>
@@ -119,6 +102,10 @@ function handleSubmit(): void {
       novalidate
       @submit.prevent="handleSubmit"
     >
+      <p v-if="formErrors.deviceId" class="form-level-error" role="alert">
+        {{ formErrors.deviceId }}
+      </p>
+
       <section class="device-summary" aria-labelledby="inspection-device-heading">
         <div>
           <span class="section-kicker">巡检设备</span>
@@ -219,13 +206,36 @@ function handleSubmit(): void {
       </section>
 
       <div class="form-actions">
-        <button class="primary-action" type="submit">检查表单</button>
-        <p class="submit-hint">本任务只验证输入，不会创建或保存巡检记录。</p>
+        <button class="primary-action" type="submit" :disabled="savedRecord !== null">
+          {{ savedRecord ? '已保存到本次会话' : '保存巡检记录' }}
+        </button>
+        <p class="submit-hint">
+          当前保存到 Pinia 内存；刷新应用后记录会消失，下一阶段再接入 Preferences。
+        </p>
       </div>
 
-      <p v-if="validationFeedback" class="validation-success" role="status">
-        {{ validationFeedback }}
-      </p>
+      <section v-if="savedRecord" class="save-success" role="status">
+        <div>
+          <strong>巡检记录已创建</strong>
+          <p>记录已加入 Pinia 内存历史。修改表单内容后，可以创建另一条记录。</p>
+        </div>
+        <dl>
+          <div>
+            <dt>记录 ID</dt>
+            <dd>{{ savedRecord.id }}</dd>
+          </div>
+          <div>
+            <dt>巡检结果</dt>
+            <dd>{{ INSPECTION_RESULT_LABELS[savedRecord.result] }}</dd>
+          </div>
+          <div>
+            <dt>巡检时间</dt>
+            <dd>
+              <time :datetime="savedRecord.inspectedAt">{{ savedRecord.inspectedAt }}</time>
+            </dd>
+          </div>
+        </dl>
+      </section>
     </form>
   </div>
 </template>
@@ -252,6 +262,17 @@ function handleSubmit(): void {
   font-size: 0.875rem;
 }
 
+.page-header .session-summary {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .back-link {
   display: inline-block;
   margin-bottom: 0.75rem;
@@ -268,6 +289,16 @@ function handleSubmit(): void {
 
 .feedback--error {
   color: #dc2626;
+}
+
+.form-level-error {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid #fca5a5;
+  border-radius: 0.625rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  font-size: 0.875rem;
 }
 
 .inspection-form {
@@ -500,6 +531,11 @@ textarea[aria-invalid='true'] {
   background: #1d4ed8;
 }
 
+.primary-action:disabled {
+  background: #16a34a;
+  cursor: default;
+}
+
 .submit-hint {
   margin: 0.55rem 0 0;
   color: #64748b;
@@ -507,14 +543,55 @@ textarea[aria-invalid='true'] {
   text-align: center;
 }
 
-.validation-success {
+.save-success {
   margin: 0;
-  padding: 0.85rem 1rem;
+  padding: 1rem;
   border: 1px solid #86efac;
   border-radius: 0.625rem;
   color: #166534;
   background: #f0fdf4;
   font-size: 0.875rem;
+}
+
+.save-success strong {
+  font-size: 0.95rem;
+}
+
+.save-success p {
+  margin: 0.25rem 0 0;
+  color: #15803d;
+  font-size: 0.75rem;
+}
+
+.save-success dl {
+  margin: 0.85rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid #bbf7d0;
+}
+
+.save-success dl div {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.save-success dl div + div {
+  margin-top: 0.4rem;
+}
+
+.save-success dt,
+.save-success dd {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.save-success dt {
+  color: #16a34a;
+}
+
+.save-success dd {
+  overflow-wrap: anywhere;
+  color: #166534;
 }
 
 @media (max-width: 560px) {
