@@ -3,6 +3,7 @@ import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDeviceStore } from '../stores/deviceStore'
 import { DEVICE_STATUS_LABELS, type DeviceStatus } from '../types/device'
+import { formatDateTime } from '../utils/date'
 
 const props = defineProps<{
   id: string
@@ -21,20 +22,6 @@ watch(
     void deviceStore.loadDeviceById(nextId)
   },
 )
-
-function formatDate(isoString: string | null): string {
-  if (!isoString) {
-    return '暂无记录'
-  }
-
-  return new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(isoString))
-}
 
 function statusClass(status: DeviceStatus): string {
   return `status-badge status-badge--${status}`
@@ -70,7 +57,7 @@ function statusClass(status: DeviceStatus): string {
         </div>
         <div class="detail-item">
           <dt>上次巡检</dt>
-          <dd>{{ formatDate(currentDevice.lastInspectionAt) }}</dd>
+          <dd>{{ formatDateTime(currentDevice.lastInspectionAt) }}</dd>
         </div>
       </dl>
 

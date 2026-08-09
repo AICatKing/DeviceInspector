@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDeviceStore } from '../stores/deviceStore'
 import { DEVICE_STATUS_LABELS, type DeviceStatus } from '../types/device'
+import { formatDateTime } from '../utils/date'
 
 const deviceStore = useDeviceStore()
 const { devices, loading, error } = storeToRefs(deviceStore)
@@ -10,20 +11,6 @@ const { devices, loading, error } = storeToRefs(deviceStore)
 onMounted(() => {
   void deviceStore.loadDevices()
 })
-
-function formatDate(isoString: string | null): string {
-  if (!isoString) {
-    return '暂无记录'
-  }
-
-  return new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(isoString))
-}
 
 function statusClass(status: DeviceStatus): string {
   return `status-badge status-badge--${status}`
@@ -53,7 +40,7 @@ function statusClass(status: DeviceStatus): string {
               {{ DEVICE_STATUS_LABELS[device.status] }}
             </span>
             <span class="last-inspection">
-              上次巡检：{{ formatDate(device.lastInspectionAt) }}
+              上次巡检：{{ formatDateTime(device.lastInspectionAt) }}
             </span>
           </div>
         </RouterLink>

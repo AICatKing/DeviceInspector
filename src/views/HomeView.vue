@@ -7,8 +7,13 @@ const appSubtitle = '设备巡检助手'
   <main class="home">
     <h1>{{ appName }}</h1>
     <p class="subtitle">{{ appSubtitle }}</p>
-    <p class="status">项目骨架已就绪，Day 1 Task 1 完成。</p>
-    <RouterLink class="entry-link" to="/devices">进入设备列表 →</RouterLink>
+    <p class="status">核心 Web 巡检流程已就绪</p>
+    <div class="entry-actions">
+      <RouterLink class="entry-link" to="/devices">进入设备列表 →</RouterLink>
+      <RouterLink class="entry-link entry-link--secondary" to="/inspections">
+        查看巡检历史
+      </RouterLink>
+    </div>
   </main>
 </template>
 
@@ -49,5 +54,18 @@ h1 {
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.entry-link--secondary {
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  background: #eff6ff;
 }
 </style>

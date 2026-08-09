@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import DeviceListView from '../views/DeviceListView.vue'
 import DeviceDetailView from '../views/DeviceDetailView.vue'
 import InspectionFormView from '../views/InspectionFormView.vue'
+import InspectionHistoryView from '../views/InspectionHistoryView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +29,11 @@ const router = createRouter({
       name: 'inspection-create',
       component: InspectionFormView,
       props: true,
+    },
+    {
+      path: '/inspections',
+      name: 'inspection-history',
+      component: InspectionHistoryView,
     },
   ],
 })

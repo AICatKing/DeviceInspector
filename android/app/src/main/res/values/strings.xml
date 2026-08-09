@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Device Inspector</string>
+    <string name="title_activity_main">Device Inspector</string>
+    <string name="package_name">com.hugh.deviceinspector</string>
+    <string name="custom_url_scheme">com.hugh.deviceinspector</string>
+</resources>

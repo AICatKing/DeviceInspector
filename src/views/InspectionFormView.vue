@@ -29,13 +29,20 @@ const resultOptions: ReadonlyArray<{
 const deviceStore = useDeviceStore()
 const { currentDevice, detailLoading, detailError } = storeToRefs(deviceStore)
 const inspectionStore = useInspectionStore()
-const { recordCount } = storeToRefs(inspectionStore)
+const {
+  recordCount,
+  initialized,
+  loading: recordsLoading,
+  submitting,
+  storageError,
+} = storeToRefs(inspectionStore)
 
 const draft = reactive<InspectionDraft>(createDraft(props.id))
 const formErrors = reactive<InspectionValidationErrors>(
   createEmptyInspectionValidationErrors(),
 )
 const savedRecord = ref<InspectionRecord | null>(null)
+const submitError = ref<string | null>(null)
 
 watch(
   () => props.id,
@@ -43,6 +50,7 @@ watch(
     Object.assign(draft, createDraft(nextId))
     Object.assign(formErrors, createEmptyInspectionValidationErrors())
     savedRecord.value = null
+    submitError.value = null
     void deviceStore.loadDeviceById(nextId)
   },
   { immediate: true },
@@ -52,6 +60,7 @@ watch(
   () => [draft.inspectorName, draft.result, draft.notes],
   () => {
     savedRecord.value = null
+    submitError.value = null
   },
 )
 
@@ -65,17 +74,29 @@ function createDraft(deviceId: string): InspectionDraft {
   }
 }
 
-function handleSubmit(): void {
-  const creationResult = inspectionStore.submitInspection(draft)
+async function handleSubmit(): Promise<void> {
+  submitError.value = null
+  const submissionResult = await inspectionStore.submitInspection(draft)
 
-  if (!creationResult.success) {
-    Object.assign(formErrors, creationResult.errors)
+  if (submissionResult.status === 'validation-error') {
+    Object.assign(formErrors, submissionResult.errors)
+    savedRecord.value = null
+    return
+  }
+
+  if (submissionResult.status !== 'success') {
+    submitError.value = submissionResult.message
     savedRecord.value = null
     return
   }
 
   Object.assign(formErrors, createEmptyInspectionValidationErrors())
-  savedRecord.value = creationResult.record
+  savedRecord.value = submissionResult.record
+}
+
+function retryLoadRecords(): void {
+  submitError.value = null
+  void inspectionStore.initialize()
 }
 </script>
 
@@ -90,7 +111,10 @@ function handleSubmit(): void {
       </RouterLink>
       <h1>创建巡检</h1>
       <p>填写本次设备巡检信息</p>
-      <p class="session-summary">本次会话已保存 {{ recordCount }} 条巡检记录</p>
+      <p class="session-summary">
+        <template v-if="!initialized || recordsLoading">正在恢复本地巡检历史...</template>
+        <template v-else>本地已保存 {{ recordCount }} 条巡检记录</template>
+      </p>
     </header>
 
     <p v-if="detailLoading" class="feedback">正在加载设备信息...</p>
@@ -104,6 +128,19 @@ function handleSubmit(): void {
     >
       <p v-if="formErrors.deviceId" class="form-level-error" role="alert">
         {{ formErrors.deviceId }}
+      </p>
+
+      <div
+        v-if="storageError?.operation === 'load'"
+        class="storage-error"
+        role="alert"
+      >
+        <span>{{ storageError.message }}</span>
+        <button type="button" @click="retryLoadRecords">重新读取</button>
+      </div>
+
+      <p v-if="submitError" class="submit-error" role="alert">
+        {{ submitError }}
       </p>
 
       <section class="device-summary" aria-labelledby="inspection-device-heading">
@@ -206,18 +243,37 @@ function handleSubmit(): void {
       </section>
 
       <div class="form-actions">
-        <button class="primary-action" type="submit" :disabled="savedRecord !== null">
-          {{ savedRecord ? '已保存到本次会话' : '保存巡检记录' }}
+        <button
+          class="primary-action"
+          :class="{ 'primary-action--saved': savedRecord !== null }"
+          type="submit"
+          :disabled="
+            savedRecord !== null ||
+            submitting ||
+            !initialized ||
+            recordsLoading ||
+            storageError?.operation === 'load'
+          "
+        >
+          {{
+            !initialized || recordsLoading
+              ? '正在恢复本地数据...'
+              : submitting
+                ? '正在保存...'
+                : savedRecord
+                  ? '已保存到本地'
+                  : '保存巡检记录'
+          }}
         </button>
         <p class="submit-hint">
-          当前保存到 Pinia 内存；刷新应用后记录会消失，下一阶段再接入 Preferences。
+          记录将先写入 Capacitor Preferences，成功后再同步到 Pinia。
         </p>
       </div>
 
       <section v-if="savedRecord" class="save-success" role="status">
         <div>
           <strong>巡检记录已创建</strong>
-          <p>记录已加入 Pinia 内存历史。修改表单内容后，可以创建另一条记录。</p>
+          <p>记录已写入 Preferences 并同步到 Pinia。修改表单后可创建另一条记录。</p>
         </div>
         <dl>
           <div>
@@ -235,6 +291,9 @@ function handleSubmit(): void {
             </dd>
           </div>
         </dl>
+        <RouterLink class="history-link" :to="{ name: 'inspection-history' }">
+          查看巡检历史 →
+        </RouterLink>
       </section>
     </form>
   </div>
@@ -292,6 +351,39 @@ function handleSubmit(): void {
 }
 
 .form-level-error {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid #fca5a5;
+  border-radius: 0.625rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  font-size: 0.875rem;
+}
+
+.storage-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #fca5a5;
+  border-radius: 0.625rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  font-size: 0.8rem;
+}
+
+.storage-error button {
+  flex-shrink: 0;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #fca5a5;
+  border-radius: 0.4rem;
+  color: #b91c1c;
+  background: #fff;
+  cursor: pointer;
+}
+
+.submit-error {
   margin: 0;
   padding: 0.85rem 1rem;
   border: 1px solid #fca5a5;
@@ -532,6 +624,11 @@ textarea[aria-invalid='true'] {
 }
 
 .primary-action:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.primary-action--saved:disabled {
   background: #16a34a;
   cursor: default;
 }
@@ -594,9 +691,19 @@ textarea[aria-invalid='true'] {
   color: #166534;
 }
 
+.history-link {
+  display: inline-block;
+  margin-top: 0.85rem;
+  color: #166534;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 @media (max-width: 560px) {
   .device-summary,
-  .photo-placeholder {
+  .photo-placeholder,
+  .storage-error {
     align-items: stretch;
     flex-direction: column;
   }
