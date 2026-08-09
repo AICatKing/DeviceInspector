@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Device Inspector 五阶段学习与面试复习手册</title>
+<style>
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --text:#1f2937;
+    --muted:#667085;
+    --line:#e5e7eb;
+    --primary:#2563eb;
+    --primary-soft:#eff6ff;
+    --green:#15803d;
+    --green-soft:#f0fdf4;
+    --amber:#b45309;
+    --amber-soft:#fffbeb;
+    --red:#b91c1c;
+    --red-soft:#fef2f2;
+    --purple:#7e22ce;
+    --purple-soft:#faf5ff;
+    --code:#0f172a;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.75;
+  }
+  .layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+  aside{
+    position:sticky;top:0;height:100vh;overflow:auto;
+    padding:28px 20px;background:#111827;color:#fff;
+  }
+  aside h1{font-size:20px;margin:0 0 8px}
+  aside p{font-size:13px;color:#cbd5e1;margin:0 0 24px}
+  aside a{
+    display:block;color:#dbeafe;text-decoration:none;padding:9px 10px;
+    border-radius:8px;font-size:14px;margin-bottom:5px
+  }
+  aside a:hover{background:#1f2937}
+  main{max-width:1120px;width:100%;margin:0 auto;padding:42px 36px 80px}
+  .hero{
+    background:linear-gradient(135deg,#1d4ed8,#4338ca);
+    color:white;padding:38px;border-radius:20px;margin-bottom:28px;
+    box-shadow:0 12px 30px rgba(37,99,235,.18)
+  }
+  .hero h1{margin:0 0 12px;font-size:34px}
+  .hero p{margin:0;color:#dbeafe;max-width:850px}
+  .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:24px}
+  .summary-grid div{
+    background:rgba(255,255,255,.12);padding:15px;border-radius:12px;font-size:13px
+  }
+  section.card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px;margin:22px 0;box-shadow:0 3px 15px rgba(15,23,42,.04)
+  }
+  h2{font-size:26px;margin:0 0 8px}
+  h3{font-size:19px;margin-top:28px;margin-bottom:10px}
+  h4{font-size:16px;margin-top:22px;margin-bottom:8px}
+  .stage-tag{
+    display:inline-block;padding:4px 9px;border-radius:999px;
+    background:var(--primary-soft);color:var(--primary);font-size:12px;font-weight:700;margin-bottom:10px
+  }
+  .goal{
+    background:var(--primary-soft);border-left:4px solid var(--primary);
+    padding:14px 16px;border-radius:10px;margin:16px 0
+  }
+  .focus{
+    background:var(--amber-soft);border-left:4px solid #f59e0b;
+    padding:14px 16px;border-radius:10px;margin:16px 0
+  }
+  .check{
+    background:var(--green-soft);border-left:4px solid #22c55e;
+    padding:14px 16px;border-radius:10px;margin:16px 0
+  }
+  .warning{
+    background:var(--red-soft);border-left:4px solid #ef4444;
+    padding:14px 16px;border-radius:10px;margin:16px 0
+  }
+  pre{
+    background:var(--code);color:#e2e8f0;padding:18px 20px;border-radius:12px;
+    overflow:auto;font-size:14px;line-height:1.6
+  }
+  code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+  table{width:100%;border-collapse:collapse;margin:14px 0 8px;font-size:14px}
+  th,td{border:1px solid var(--line);padding:11px 12px;vertical-align:top;text-align:left}
+  th{background:#f8fafc}
+  ul{padding-left:22px}
+  li{margin:5px 0}
+  .pill{
+    display:inline-block;padding:2px 8px;border-radius:999px;
+    background:#f3f4f6;color:#374151;font-size:12px;margin:2px
+  }
+  .interview{
+    background:var(--purple-soft);border:1px solid #e9d5ff;padding:16px 18px;border-radius:12px
+  }
+  .roadmap{
+    background:#0f172a;color:#e2e8f0;padding:24px;border-radius:16px;margin-top:20px
+  }
+  .roadmap strong{color:white}
+  .small{font-size:13px;color:var(--muted)}
+  .top-link{font-size:13px}
+  @media(max-width:900px){
+    .layout{display:block}
+    aside{position:relative;height:auto}
+    main{padding:24px 16px 60px}
+    .summary-grid{grid-template-columns:1fr}
+    .hero h1{font-size:27px}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside>
+  <h1>Device Inspector</h1>
+  <p>Vue 3 + TypeScript + Capacitor<br/>五阶段学习 / 开发 / 面试复习</p>
+  <a href="#overview">总览</a>
+  <a href="#stage1">阶段 1：领域模型与核心 Web 流程</a>
+  <a href="#stage2">阶段 2：Preferences 与巡检历史</a>
+  <a href="#stage3">阶段 3：Camera、Filesystem 与权限</a>
+  <a href="#stage4">阶段 4：Device、Network 与通知</a>
+  <a href="#stage5">阶段 5：真机、Release 与面试材料</a>
+  <a href="#final">最终复习清单</a>
+</aside>
+
+<main>
+<section class="hero" id="overview">
+  <h1>Device Inspector 五阶段开发路线</h1>
+  <p>把项目从“一个 Vue 页面”逐步推进到“可以安装、离线使用、调用 Android Native 能力、发布 Release 包，并且能够在面试中完整讲解”的 Hybrid App。</p>
+  <div class="summary-grid">
+    <div><b>阶段 1</b><br/>把业务闭环跑通</div>
+    <div><b>阶段 2</b><br/>让数据跨重启存在</div>
+    <div><b>阶段 3</b><br/>接入相机和文件系统</div>
+    <div><b>阶段 4</b><br/>感知系统、网络与提醒</div>
+    <div><b>阶段 5</b><br/>真机验证和工程交付</div>
+  </div>
+</section>
+
+<section class="card" id="stage1">
+  <span class="stage-tag">阶段 1</span>
+  <h2>领域模型与核心 Web 流程</h2>
+  <div class="goal"><b>目标：</b>先把最小业务闭环跑通：选设备 → 创建巡检 → 校验 → 提交 → 在 Pinia 内存中形成巡检记录。</div>
+
+  <h3>核心流程</h3>
+  <pre><code>设备列表
+  ↓
+设备详情
+  ↓
+创建巡检
+  ↓
+InspectionDraft
+  ↓
+基础校验
+  ↓
+InspectionRecord
+  ↓
+Pinia records[]</code></pre>
+
+  <h3>你需要完成什么</h3>
+  <table>
+    <tr><th>任务</th><th>真正含义</th><th>关注点</th></tr>
+    <tr><td>稳定设备列表和详情</td><td>保证 DeviceList → DeviceDetail 路由和数据查询稳定</td><td>直接输入详情 URL 也能正常处理</td></tr>
+    <tr><td>定义巡检草稿</td><td>描述“用户正在填写”的数据</td><td>Draft 不等于正式业务记录</td></tr>
+    <tr><td>定义巡检记录</td><td>描述“提交后”的正式数据</td><td>增加 id、createdAt 等正式字段</td></tr>
+    <tr><td>创建巡检页面</td><td>表单输入、结果选择、备注等</td><td>页面只负责交互，不要塞太多业务逻辑</td></tr>
+    <tr><td>提交到 Pinia</td><td>records.push(record)</td><td>先做内存闭环，不急着做数据库</td></tr>
+  </table>
+
+  <div class="focus"><b>这一阶段重点关注：</b>数据模型比页面更重要。先分清 <code>Device</code>、<code>InspectionDraft</code>、<code>InspectionRecord</code> 三个概念。</div>
+
+  <h3>你要记录的知识点</h3>
+  <ul>
+    <li><code>Draft</code> 表示编辑中的临时状态，<code>Record</code> 表示提交后的正式业务数据。</li>
+    <li>Pinia 负责当前运行时状态。</li>
+    <li>页面通过 Store 操作业务数据，不要每个页面各自维护一份记录。</li>
+    <li>先形成最小闭环，再逐渐加持久化、照片、网络等能力。</li>
+  </ul>
+
+  <div class="check"><b>阶段验收：</b>选择一台设备 → 填巡检 → 提交 → <code>records[]</code> 新增一条记录。</div>
+
+  <div class="interview"><b>面试表达：</b>我先定义巡检领域模型，通过设备详情进入巡检创建页，使用 Draft 承载表单状态，完成基础校验后转换为 InspectionRecord，并提交到 Pinia Store，形成最小业务闭环。</div>
+</section>
+
+<section class="card" id="stage2">
+  <span class="stage-tag">阶段 2</span>
+  <h2>Preferences 与巡检历史</h2>
+  <div class="goal"><b>目标：</b>解决“刷新/关闭 App 后 Pinia 数据全部消失”的问题，并完成巡检历史浏览。</div>
+
+  <h3>核心流程</h3>
+  <pre><code>InspectionRecord[]
+       ↓
+JSON.stringify()
+       ↓
+Capacitor Preferences
+       ↓
+App 关闭 / 重启
+       ↓
+Preferences.get()
+       ↓
+JSON.parse()
+       ↓
+恢复 Pinia
+       ↓
+历史列表 → 历史详情</code></pre>
+
+  <h3>你需要完成什么</h3>
+  <table>
+    <tr><th>任务</th><th>真正含义</th><th>关注点</th></tr>
+    <tr><td>持久化记录元数据</td><td>把 records 转成 JSON 存入 Preferences</td><td>Preferences 适合小型结构化数据</td></tr>
+    <tr><td>启动恢复数据</td><td>App 初始化时读取本地 JSON 并灌回 Pinia</td><td>理解 hydration / 状态恢复</td></tr>
+    <tr><td>历史列表</td><td>展示 records[]</td><td>页面读取 Store，不直接读取 Preferences</td></tr>
+    <tr><td>历史详情</td><td>按 id 查找某条记录</td><td>和 Device Detail 的查询模式相似</td></tr>
+    <tr><td>JSON 损坏</td><td>JSON.parse 可能抛异常</td><td>必须容错，不能让 App 启动失败</td></tr>
+    <tr><td>数据版本</td><td>为未来字段变化留下兼容空间</td><td>考虑 version / migration</td></tr>
+  </table>
+
+  <div class="focus"><b>这一阶段重点关注：</b><code>Pinia = 运行时状态</code>，<code>Preferences = 持久化状态</code>。页面不要直接操作 Native Storage。</div>
+
+  <h3>推荐分层</h3>
+  <pre><code>Vue Page
+   ↓
+Inspection Store
+   ↓
+inspection-storage.service.ts
+   ↓
+Capacitor Preferences</code></pre>
+
+  <h3>你要记录的知识点</h3>
+  <ul>
+    <li><code>JSON.stringify()</code>：对象/数组 → 字符串。</li>
+    <li><code>JSON.parse()</code>：字符串 → 对象/数组。</li>
+    <li>本地 JSON 也要当成“不可信输入”，读取时必须有异常处理。</li>
+    <li>发生解析错误时，可以回退为空数组，同时通过日志保留错误信息。</li>
+    <li>数据长期存在后要考虑 schema/version 变化。</li>
+  </ul>
+
+  <div class="warning"><b>常见坑：</b>不要让 <code>InspectionHistory.vue</code> 自己调用 <code>Preferences.get()</code>，否则状态来源会变乱。</div>
+
+  <div class="check"><b>阶段验收：</b>提交巡检 → 完全关闭 App → 再打开 → 历史记录依然存在并能查看详情。</div>
+
+  <div class="interview"><b>面试表达：</b>巡检记录运行时由 Pinia 管理，提交后通过 Preferences 持久化。App 启动时统一恢复到 Store，同时对 JSON 损坏和数据版本做了容错设计。</div>
+</section>
+
+<section class="card" id="stage3">
+  <span class="stage-tag">阶段 3</span>
+  <h2>Camera、Filesystem 与 Android 权限</h2>
+  <div class="goal"><b>目标：</b>让用户拍摄现场照片，把图片真正保存到 App 本地文件系统，并让历史记录长期引用这些图片。</div>
+
+  <h3>核心流程</h3>
+  <pre><code>创建巡检
+   ↓
+Camera.getPhoto()
+   ↓
+临时照片 / URI
+   ↓
+Filesystem.writeFile()
+   ↓
+长期保存的图片文件
+   ↓
+得到 photoPath
+   ↓
+InspectionRecord 保存 photoPath
+   ↓
+Preferences 保存记录元数据</code></pre>
+
+  <h3>必须分清两种存储</h3>
+  <table>
+    <tr><th>能力</th><th>存什么</th><th>不要存什么</th></tr>
+    <tr><td>Preferences</td><td>id、deviceId、result、remark、photoPath</td><td>大图片/Base64 大数据</td></tr>
+    <tr><td>Filesystem</td><td>jpg/png 等真实文件</td><td>业务结构化元数据</td></tr>
+  </table>
+
+  <div class="focus"><b>这一阶段最关键的设计：</b>业务记录只保存“文件引用”，即 <code>photoPath</code>；真正的图片文件交给 Filesystem。</div>
+
+  <h3>异常分支一定要做</h3>
+  <pre><code>taking photo
+ ├─ 成功 → saving
+ ├─ 用户取消 → 回到 idle
+ ├─ 权限拒绝 → permissionDenied
+ └─ 相机异常 → error
+
+saving file
+ ├─ 成功 → photoPath
+ └─ 写入失败 → error，不保存假的 photoPath</code></pre>
+
+  <h3>你要记录的知识点</h3>
+  <ul>
+    <li>Camera 负责“获取照片”，Filesystem 负责“长期保存照片”。</li>
+    <li>拍照成功不代表整个流程成功，Filesystem 写入也必须成功。</li>
+    <li>用户取消 ≠ 系统异常，不应该用错误弹窗吓用户。</li>
+    <li>Native 权限永远不能假设一定会被用户授予。</li>
+    <li>读取历史详情时，通过 photoPath 找回文件并展示。</li>
+  </ul>
+
+  <h3>推荐分层</h3>
+  <pre><code>InspectionCreate.vue
+       ↓
+inspection-photo.service.ts
+       ↓
+ ┌─────────────┐
+ ↓             ↓
+Camera      Filesystem</code></pre>
+
+  <div class="check"><b>阶段验收：</b>真机拍照 → 保存 → 提交 → 历史详情能显示 → 杀掉 App 后重开，图片仍然存在。</div>
+
+  <div class="interview"><b>面试表达：</b>我通过 Capacitor Camera 获取现场照片，再使用 Filesystem 持久化到应用本地目录，巡检记录只保存文件路径引用，并处理了取消、权限拒绝和文件写入失败。</div>
+</section>
+
+<section class="card" id="stage4">
+  <span class="stage-tag">阶段 4</span>
+  <h2>Device、Network 与 Local Notifications</h2>
+  <div class="goal"><b>目标：</b>让 App 能感知当前设备、网络状态，并在离线情况下继续工作，同时为巡检任务安排本地提醒。</div>
+
+  <h3>四块能力</h3>
+  <pre><code>Device
+→ 我运行在哪台设备上？
+
+Network
+→ 我现在有没有网络？
+
+Preferences / Filesystem
+→ 没网时还能不能浏览本地数据？
+
+Local Notifications
+→ 到时间能不能提醒用户？</code></pre>
+
+  <h3>你需要完成什么</h3>
+  <table>
+    <tr><th>模块</th><th>任务</th><th>关注点</th></tr>
+    <tr><td>Device</td><td>系统信息页</td><td>型号、平台、系统版本、制造商等</td></tr>
+    <tr><td>Network</td><td>初始查询 + 状态监听</td><td><code>getStatus</code> 和 <code>addListener</code> 是两件事</td></tr>
+    <tr><td>Offline</td><td>断网后继续浏览本地数据</td><td>离线 ≠ 整个 App 不可用</td></tr>
+    <tr><td>Notification</td><td>权限申请 + 定时提醒</td><td>最好和巡检任务本身绑定</td></tr>
+  </table>
+
+  <h3>Network 的正确理解</h3>
+  <pre><code>App 启动
+  ↓
+Network.getStatus()
+  ↓
+得到初始 isOnline
+
+App 运行中
+  ↓
+Network.addListener()
+  ↓
+Wi-Fi / 移动网络变化
+  ↓
+更新 networkStore
+  ↓
+Vue UI 自动响应</code></pre>
+
+  <div class="focus"><b>这一阶段重点关注：</b>Network Listener 是长期监听，要考虑注册和清理；Offline-first 的核心不是“没网禁用 App”，而是“本地能力继续工作，只有远程能力受限”。</div>
+
+  <h3>本地通知要和业务生命周期关联</h3>
+  <pre><code>创建任务
+ ↓
+schedule notification
+
+修改提醒时间
+ ↓
+cancel old + schedule new
+
+删除任务
+ ↓
+cancel notification</code></pre>
+
+  <h3>你要记录的知识点</h3>
+  <ul>
+    <li>Device 能力是 Hybrid App 与普通网页的重要区别之一。</li>
+    <li>网络状态应该进入 Store，让多个页面共享。</li>
+    <li>全局离线提示可以放在 App.vue，例如 NetworkBanner。</li>
+    <li>Local Notification 是本地安排，不等于服务器 Push。</li>
+    <li>任务和 Notification 最好保存关联 id，便于修改/删除时同步取消。</li>
+  </ul>
+
+  <div class="check"><b>阶段验收：</b>关闭网络 → 页面立即显示离线 → 历史和图片仍能浏览；创建提醒 → App 退后台后 Android 能按时弹通知。</div>
+
+  <div class="interview"><b>面试表达：</b>我通过 Network Plugin 将 Android 网络状态映射到 Pinia，并设计本地优先访问，使离线情况下仍可浏览巡检记录；同时用 Local Notifications 将提醒和巡检任务生命周期关联。</div>
+</section>
+
+<section class="card" id="stage5">
+  <span class="stage-tag">阶段 5</span>
+  <h2>真机调试、Release 打包和面试材料</h2>
+  <div class="goal"><b>目标：</b>从“源码开发完成”走到“真机稳定、可以安装、可以交付、可以展示、可以讲清楚”。</div>
+
+  <h3>整个交付链路</h3>
+  <pre><code>src/
+ ↓
+npm run build
+ ↓
+dist/
+ ↓
+npx cap sync android
+ ↓
+android/
+ ↓
+Android Studio
+ ↓
+真机 Debug
+ ↓
+权限 / 生命周期检查
+ ↓
+Release 签名
+ ↓
+APK / AAB
+ ↓
+README / 架构图 / 演示脚本</code></pre>
+
+  <h3>Android Studio 与真机要关注什么</h3>
+  <ul>
+    <li>Vue 层问题：Chrome DevTools / console。</li>
+    <li>Android Native 层问题：Android Studio Logcat。</li>
+    <li>改完 Web 代码后，注意重新 build / sync，否则手机可能仍运行旧资源。</li>
+    <li>必须验证 Camera、Filesystem、Preferences、Network、Notifications 的真机行为。</li>
+  </ul>
+
+  <h3>Manifest 与生命周期</h3>
+  <table>
+    <tr><th>检查项</th><th>关注点</th></tr>
+    <tr><td>AndroidManifest.xml</td><td>插件和权限配置是否正确</td></tr>
+    <tr><td>权限拒绝</td><td>Camera / Notification 被拒绝后是否友好降级</td></tr>
+    <tr><td>后台恢复</td><td>切后台再回来，页面状态是否正常</td></tr>
+    <tr><td>杀进程重开</td><td>Preferences / Filesystem 数据是否仍在</td></tr>
+    <tr><td>Listener 生命周期</td><td>Network Listener 是否重复注册</td></tr>
+  </table>
+
+  <h3>Release 需要理解什么</h3>
+  <pre><code>Debug
+→ 开发测试
+
+Release
+→ 正式发布
+
+keystore
+→ Android App 的签名身份
+
+APK
+→ 可以直接安装到 Android 手机
+
+AAB
+→ 主要用于应用商店发布</code></pre>
+
+  <div class="warning"><b>安全提醒：</b>keystore、私钥和密码不要提交到公开 Git 仓库；签名资产未来升级版本时仍然要用。</div>
+
+  <h3>README 应该记录什么</h3>
+  <ul>
+    <li>项目是什么、解决什么问题。</li>
+    <li>技术栈：Vue 3 / TypeScript / Vite / Pinia / Router / Capacitor / Android。</li>
+    <li>Native 能力：Camera、Filesystem、Preferences、Device、Network、Local Notifications。</li>
+    <li>项目架构图。</li>
+    <li>关键设计决策：为什么 Preferences 不存图片、为什么使用 Service 分层、为什么做 Offline-first。</li>
+    <li>截图、运行方式、Release 说明。</li>
+  </ul>
+
+  <h3>面试演示固定路线</h3>
+  <pre><code>1. 打开 App，介绍 Hybrid 项目
+2. 设备列表 → 设备详情
+3. 创建巡检 → Camera 拍照
+4. 提交 → Preferences + Filesystem
+5. 历史详情 → 重启后仍可恢复
+6. 断网 → Offline 仍能浏览
+7. 系统信息 / Local Notification（时间允许再演示）</code></pre>
+
+  <div class="focus"><b>这一阶段重点关注：</b>面试时不要按“我用了哪些 Plugin”来讲，而要按“业务问题 → 技术方案 → 异常处理 → 验证结果”来讲。</div>
+
+  <div class="check"><b>阶段验收：</b>APK 能脱离 Android Studio 独立安装；真机核心能力均验证；README 能让别人快速理解项目；你能在 3～5 分钟内完整演示和讲解。</div>
+
+  <div class="interview"><b>面试表达：</b>项目最终经过 Android 真机验证，并对权限拒绝、后台恢复和 Listener 生命周期进行检查；随后使用 keystore 生成 Release APK/AAB，同时整理 README、架构图和固定演示脚本。</div>
+</section>
+
+<section class="card" id="final">
+  <h2>最终复习清单：五阶段到底要记什么？</h2>
+
+  <div class="roadmap">
+    <strong>阶段 1：业务模型</strong><br/>
+    Device → Draft → Record → Pinia<br/><br/>
+    <strong>阶段 2：持久化</strong><br/>
+    Pinia → Preferences → App 重启恢复 → History<br/><br/>
+    <strong>阶段 3：文件能力</strong><br/>
+    Camera → Filesystem → photoPath → Record<br/><br/>
+    <strong>阶段 4：系统能力</strong><br/>
+    Device + Network + Offline + Local Notifications<br/><br/>
+    <strong>阶段 5：工程交付</strong><br/>
+    Android Studio → 真机 → 权限/生命周期 → Release → APK/AAB → README → 面试 Demo
+  </div>
+
+  <h3>你最需要记住的 15 句话</h3>
+  <ol>
+    <li>Draft 是编辑状态，Record 是正式业务数据。</li>
+    <li>Pinia 管运行时状态，Preferences 管跨重启持久化。</li>
+    <li>页面尽量只认 Store，不直接操作 Native Storage。</li>
+    <li>JSON.parse 可能失败，本地数据也必须做容错。</li>
+    <li>长期存在的数据要考虑 version 和迁移。</li>
+    <li>Camera 负责拿照片，Filesystem 负责长期保存。</li>
+    <li>业务记录存 photoPath，不把大图片塞进 Preferences。</li>
+    <li>用户取消和真正异常要区分。</li>
+    <li>Native 权限不能假设一定会授予。</li>
+    <li>Network 要先查询当前状态，再监听后续变化。</li>
+    <li>离线不等于 App 不可用，本地能力应该继续工作。</li>
+    <li>Local Notification 要和任务生命周期保持一致。</li>
+    <li>Hybrid 调试同时包含 Web 层和 Android Native 层。</li>
+    <li>Debug 是开发测试，Release 是给别人安装/发布。</li>
+    <li>面试讲项目时用“业务问题 → 技术方案 → 异常处理 → 验证结果”。</li>
+  </ol>
+
+  <h3>最后的项目自检</h3>
+  <table>
+    <tr><th>问题</th><th>目标答案</th></tr>
+    <tr><td>能不能创建一条完整巡检？</td><td>YES</td></tr>
+    <tr><td>关闭 App 后记录还在吗？</td><td>YES</td></tr>
+    <tr><td>照片重启后还能显示吗？</td><td>YES</td></tr>
+    <tr><td>拒绝相机/通知权限会崩吗？</td><td>NO</td></tr>
+    <tr><td>断网还能查看本地历史吗？</td><td>YES</td></tr>
+    <tr><td>网络变化 UI 能实时响应吗？</td><td>YES</td></tr>
+    <tr><td>提醒能在 Android 真机按时出现吗？</td><td>YES</td></tr>
+    <tr><td>APK 能独立安装吗？</td><td>YES</td></tr>
+    <tr><td>能否 3～5 分钟讲清架构和亮点？</td><td>YES</td></tr>
+  </table>
+
+  <p class="small">建议：开发过程中可以在每个阶段下方追加“实际踩坑”和“我自己的理解”两块内容，这样最终就是一份很好的面试复习文档。</p>
+</section>
+
+</main>
+</div>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e"}' crossorigin="anonymous"></script>
+</body>
+</html>

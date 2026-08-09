@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useInspectionCamera } from '../composables/useInspectionCamera'
+import {
+  deletePersistedInspectionPhotos,
+  persistTemporaryInspectionPhotos,
+} from '../services/inspectionPhotoStorageService'
 import {
   createEmptyInspectionValidationErrors,
   type InspectionValidationErrors,
@@ -43,6 +48,18 @@ const formErrors = reactive<InspectionValidationErrors>(
 )
 const savedRecord = ref<InspectionRecord | null>(null)
 const submitError = ref<string | null>(null)
+const submissionStage = ref<'idle' | 'saving-photos' | 'saving-record'>('idle')
+const {
+  temporaryPhotos,
+  capturing,
+  cameraError,
+  cameraMessage,
+  canCapture,
+  maxPhotos,
+  capturePhoto,
+  removePhoto,
+  resetPhotos,
+} = useInspectionCamera()
 
 watch(
   () => props.id,
@@ -51,6 +68,7 @@ watch(
     Object.assign(formErrors, createEmptyInspectionValidationErrors())
     savedRecord.value = null
     submitError.value = null
+    resetPhotos()
     void deviceStore.loadDeviceById(nextId)
   },
   { immediate: true },
@@ -75,23 +93,65 @@ function createDraft(deviceId: string): InspectionDraft {
 }
 
 async function handleSubmit(): Promise<void> {
+  if (submissionStage.value !== 'idle') {
+    return
+  }
+
   submitError.value = null
-  const submissionResult = await inspectionStore.submitInspection(draft)
+  let persistedPhotoPaths: string[] = []
 
-  if (submissionResult.status === 'validation-error') {
-    Object.assign(formErrors, submissionResult.errors)
+  try {
+    if (temporaryPhotos.value.length > 0) {
+      submissionStage.value = 'saving-photos'
+      persistedPhotoPaths = await persistTemporaryInspectionPhotos(
+        temporaryPhotos.value,
+      )
+    }
+
+    submissionStage.value = 'saving-record'
+    const submissionResult = await inspectionStore.submitInspection({
+      ...draft,
+      photoPaths: persistedPhotoPaths,
+    })
+
+    if (submissionResult.status === 'validation-error') {
+      Object.assign(formErrors, submissionResult.errors)
+      savedRecord.value = null
+      submitError.value = await getRollbackMessage(persistedPhotoPaths)
+      return
+    }
+
+    if (submissionResult.status !== 'success') {
+      savedRecord.value = null
+      const rollbackMessage = await getRollbackMessage(persistedPhotoPaths)
+      submitError.value = `${submissionResult.message}${rollbackMessage ?? ''}`
+      return
+    }
+
+    Object.assign(formErrors, createEmptyInspectionValidationErrors())
+    savedRecord.value = submissionResult.record
+    resetPhotos()
+  } catch (error: unknown) {
     savedRecord.value = null
-    return
+    submitError.value =
+      error instanceof Error ? error.message : '保存巡检照片失败，请稍后重试'
+  } finally {
+    submissionStage.value = 'idle'
+  }
+}
+
+async function getRollbackMessage(
+  persistedPhotoPaths: readonly string[],
+): Promise<string | null> {
+  if (persistedPhotoPaths.length === 0) {
+    return null
   }
 
-  if (submissionResult.status !== 'success') {
-    submitError.value = submissionResult.message
-    savedRecord.value = null
-    return
-  }
+  const cleanupResult = await deletePersistedInspectionPhotos(persistedPhotoPaths)
 
-  Object.assign(formErrors, createEmptyInspectionValidationErrors())
-  savedRecord.value = submissionResult.record
+  return cleanupResult.failedPaths.length > 0
+    ? '；巡检记录未保存，但部分现场照片未能自动清理'
+    : null
 }
 
 function retryLoadRecords(): void {
@@ -234,12 +294,56 @@ function retryLoadRecords(): void {
         </p>
       </div>
 
-      <section class="photo-placeholder" aria-labelledby="photo-heading">
-        <div>
-          <h2 id="photo-heading">现场照片</h2>
-          <p>Camera 与 Filesystem 将在后续任务接入，本页面暂不申请原生权限。</p>
+      <section class="photo-section" aria-labelledby="photo-heading">
+        <div class="photo-section__header">
+          <div>
+            <h2 id="photo-heading">现场照片</h2>
+            <p>
+              提交巡检时会复制到应用私有目录，并保存稳定文件路径。
+            </p>
+          </div>
+          <span class="photo-count">{{ temporaryPhotos.length }} / {{ maxPhotos }}</span>
         </div>
-        <button type="button" disabled>拍摄照片（暂未接入）</button>
+
+        <button
+          class="camera-action"
+          type="button"
+          :disabled="!canCapture"
+          @click="capturePhoto"
+        >
+          {{
+            capturing
+              ? '正在打开相机...'
+              : temporaryPhotos.length >= maxPhotos
+                ? '已达到照片上限'
+                : '拍摄现场照片'
+          }}
+        </button>
+
+        <p v-if="cameraError" class="camera-feedback camera-feedback--error" role="alert">
+          {{ cameraError }}
+        </p>
+        <p v-else-if="cameraMessage" class="camera-feedback" role="status">
+          {{ cameraMessage }}
+        </p>
+
+        <ul v-if="temporaryPhotos.length > 0" class="photo-grid" aria-label="临时照片预览">
+          <li v-for="(photo, index) in temporaryPhotos" :key="photo.id" class="photo-card">
+            <img
+              :src="photo.previewUrl"
+              :alt="`现场照片 ${index + 1}`"
+            />
+            <div class="photo-card__meta">
+              <span>
+                {{ photo.format.toUpperCase() }}
+                <template v-if="photo.resolution"> · {{ photo.resolution }}</template>
+              </span>
+              <button type="button" @click="removePhoto(photo.id)">
+                移除
+              </button>
+            </div>
+          </li>
+        </ul>
       </section>
 
       <div class="form-actions">
@@ -249,6 +353,7 @@ function retryLoadRecords(): void {
           type="submit"
           :disabled="
             savedRecord !== null ||
+            submissionStage !== 'idle' ||
             submitting ||
             !initialized ||
             recordsLoading ||
@@ -256,24 +361,28 @@ function retryLoadRecords(): void {
           "
         >
           {{
-            !initialized || recordsLoading
+            submissionStage === 'saving-photos'
+              ? '正在保存现场照片...'
+              : submissionStage === 'saving-record' || submitting
+                ? '正在保存巡检记录...'
+                : !initialized || recordsLoading
               ? '正在恢复本地数据...'
-              : submitting
-                ? '正在保存...'
-                : savedRecord
+              : savedRecord
                   ? '已保存到本地'
                   : '保存巡检记录'
           }}
         </button>
         <p class="submit-hint">
-          记录将先写入 Capacitor Preferences，成功后再同步到 Pinia。
+          现场照片会先复制到应用私有目录，再随巡检记录保存到 Preferences。
         </p>
       </div>
 
       <section v-if="savedRecord" class="save-success" role="status">
         <div>
           <strong>巡检记录已创建</strong>
-          <p>记录已写入 Preferences 并同步到 Pinia。修改表单后可创建另一条记录。</p>
+          <p>
+            记录已写入 Preferences 并同步到 Pinia，共保存 {{ savedRecord.photoPaths.length }} 张现场照片。
+          </p>
         </div>
         <dl>
           <div>
@@ -401,7 +510,7 @@ function retryLoadRecords(): void {
 
 .device-summary,
 .form-field,
-.photo-placeholder,
+.photo-section,
 .form-actions {
   padding: 1.25rem;
   border: 1px solid #e2e8f0;
@@ -573,38 +682,117 @@ textarea[aria-invalid='true'] {
   color: #dc2626;
 }
 
-.photo-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+.photo-section {
   border-style: dashed;
 }
 
-.photo-placeholder h2 {
+.photo-section__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.photo-section h2 {
   margin: 0;
   font-size: 0.95rem;
 }
 
-.photo-placeholder p {
+.photo-section__header p {
   margin: 0.25rem 0 0;
   color: #64748b;
   font-size: 0.75rem;
 }
 
-.photo-placeholder button {
+.photo-count {
   flex-shrink: 0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.camera-action {
+  width: 100%;
+  margin-top: 1rem;
   padding: 0.55rem 0.75rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #2563eb;
   border-radius: 0.5rem;
+  color: #1d4ed8;
+  background: #eff6ff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.camera-action:disabled {
+  border-color: #cbd5e1;
   color: #64748b;
   background: #f8fafc;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.camera-feedback {
+  margin: 0.65rem 0 0;
+  color: #1d4ed8;
   font-size: 0.75rem;
 }
 
-.photo-placeholder button:disabled {
-  cursor: not-allowed;
-  opacity: 0.75;
+.camera-feedback--error {
+  color: #b91c1c;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.photo-card {
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.625rem;
+  background: #f8fafc;
+}
+
+.photo-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #e2e8f0;
+}
+
+.photo-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.photo-card__meta span {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-card__meta button {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  color: #dc2626;
+  background: transparent;
+  font-size: 0.7rem;
+  cursor: pointer;
 }
 
 .primary-action {
@@ -702,7 +890,6 @@ textarea[aria-invalid='true'] {
 
 @media (max-width: 560px) {
   .device-summary,
-  .photo-placeholder,
   .storage-error {
     align-items: stretch;
     flex-direction: column;
@@ -716,8 +903,17 @@ textarea[aria-invalid='true'] {
     grid-template-columns: 1fr;
   }
 
-  .photo-placeholder button {
-    width: 100%;
+  .photo-section__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .photo-count {
+    align-self: flex-start;
+  }
+
+  .photo-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

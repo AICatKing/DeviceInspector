@@ -1,0 +1,1908 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Device Inspector 设备巡检助手：Day 1 至 Day 3 Task 1 完成内容、架构、验证、面试知识与下一步手册。"
+    />
+    <title>Device Inspector｜阶段成果与学习手册</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --page: #f2f5fa;
+        --surface: #ffffff;
+        --surface-soft: #f8fafc;
+        --ink: #162033;
+        --muted: #607086;
+        --light: #8793a4;
+        --line: #dce3ed;
+        --blue: #2357d8;
+        --blue-dark: #173b99;
+        --blue-soft: #eaf0ff;
+        --green: #137a49;
+        --green-soft: #e8f7ef;
+        --amber: #a45b08;
+        --amber-soft: #fff3dd;
+        --red: #b42318;
+        --red-soft: #ffebe9;
+        --purple: #6941c6;
+        --purple-soft: #f1ebff;
+        --cyan: #087b8c;
+        --cyan-soft: #e6f7fa;
+        --radius-lg: 22px;
+        --radius-md: 14px;
+        --shadow: 0 14px 42px rgba(27, 40, 66, 0.08);
+        --content: 1180px;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 0%, rgba(35, 87, 216, 0.11), transparent 30rem),
+          radial-gradient(circle at 100% 20%, rgba(105, 65, 198, 0.08), transparent 28rem),
+          var(--page);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        line-height: 1.72;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      code,
+      pre {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      code {
+        padding: 0.12rem 0.36rem;
+        border-radius: 0.34rem;
+        color: #27447c;
+        background: #edf2fb;
+        font-size: 0.9em;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 0.85rem 0;
+        padding: 1rem 1.1rem;
+        border: 1px solid #263855;
+        border-radius: 12px;
+        color: #dce8ff;
+        background: #142038;
+        line-height: 1.62;
+      }
+
+      pre code {
+        padding: 0;
+        color: inherit;
+        background: transparent;
+        font-size: 0.86rem;
+      }
+
+      .skip-link {
+        position: fixed;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: 100;
+        padding: 0.65rem 0.9rem;
+        border-radius: 8px;
+        color: #fff;
+        background: var(--blue);
+        transform: translateY(-180%);
+        transition: transform 0.2s ease;
+      }
+
+      .skip-link:focus {
+        transform: translateY(0);
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        border-bottom: 1px solid rgba(220, 227, 237, 0.9);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(14px);
+      }
+
+      .topbar__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: min(var(--content), calc(100% - 2rem));
+        min-height: 64px;
+        margin: 0 auto;
+        gap: 1rem;
+      }
+
+      .brand {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 0.7rem;
+        font-weight: 760;
+        letter-spacing: -0.02em;
+      }
+
+      .brand__mark {
+        display: grid;
+        place-items: center;
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
+        color: #fff;
+        background: linear-gradient(145deg, var(--blue), var(--purple));
+        box-shadow: 0 8px 18px rgba(35, 87, 216, 0.25);
+      }
+
+      .topbar nav {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .topbar nav::-webkit-scrollbar {
+        display: none;
+      }
+
+      .topbar nav a,
+      .tool-button {
+        flex: 0 0 auto;
+        padding: 0.45rem 0.68rem;
+        border: 0;
+        border-radius: 8px;
+        color: var(--muted);
+        background: transparent;
+        text-decoration: none;
+        font-size: 0.84rem;
+        font-weight: 650;
+        cursor: pointer;
+      }
+
+      .topbar nav a:hover,
+      .topbar nav a:focus-visible,
+      .tool-button:hover,
+      .tool-button:focus-visible {
+        color: var(--blue);
+        background: var(--blue-soft);
+        outline: none;
+      }
+
+      .page {
+        width: min(var(--content), calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 2.4rem 0 5rem;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.7fr);
+        gap: 2rem;
+        padding: clamp(1.6rem, 4vw, 3.4rem);
+        border-radius: 28px;
+        color: #fff;
+        background: linear-gradient(135deg, #17398d 0%, #245bdc 55%, #7047ca 100%);
+        box-shadow: 0 24px 64px rgba(32, 70, 176, 0.22);
+      }
+
+      .hero::after {
+        position: absolute;
+        right: -110px;
+        bottom: -180px;
+        width: 400px;
+        height: 400px;
+        border: 78px solid rgba(255, 255, 255, 0.07);
+        border-radius: 50%;
+        content: "";
+      }
+
+      .eyebrow {
+        margin: 0 0 0.75rem;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 0.8rem;
+        font-weight: 760;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .hero h1 {
+        max-width: 760px;
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 3.65rem);
+        line-height: 1.14;
+        letter-spacing: -0.045em;
+      }
+
+      .hero__lead {
+        max-width: 720px;
+        margin: 1.2rem 0 0;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: clamp(1rem, 2vw, 1.16rem);
+      }
+
+      .hero__aside {
+        position: relative;
+        z-index: 1;
+        align-self: end;
+        padding: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.11);
+        backdrop-filter: blur(8px);
+      }
+
+      .hero__aside strong {
+        display: block;
+        margin-bottom: 0.45rem;
+      }
+
+      .hero__aside p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 0.9rem;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 1.3rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.62rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        background: var(--surface-soft);
+        font-size: 0.78rem;
+        font-weight: 650;
+      }
+
+      .hero .pill {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .section {
+        scroll-margin-top: 86px;
+        margin-top: 2.25rem;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-size: clamp(1.45rem, 3vw, 2rem);
+        letter-spacing: -0.035em;
+      }
+
+      .section-heading p {
+        max-width: 680px;
+        margin: 0.25rem 0 0;
+        color: var(--muted);
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .card--padded {
+        padding: clamp(1.2rem, 3vw, 2rem);
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.9rem;
+        margin-top: 1.2rem;
+      }
+
+      .metric {
+        padding: 1.1rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: var(--surface);
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 1.35rem;
+        letter-spacing: -0.03em;
+      }
+
+      .metric small {
+        display: block;
+        margin-top: 0.3rem;
+        color: var(--light);
+      }
+
+      .two-column,
+      .three-column {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .two-column {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .three-column {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .callout {
+        padding: 1.15rem 1.2rem;
+        border: 1px solid var(--line);
+        border-left-width: 5px;
+        border-radius: var(--radius-md);
+        background: var(--surface);
+      }
+
+      .callout h3,
+      .callout h4 {
+        margin: 0 0 0.4rem;
+      }
+
+      .callout p,
+      .callout ul,
+      .callout ol {
+        margin-top: 0.45rem;
+        margin-bottom: 0;
+        color: var(--muted);
+      }
+
+      .callout--green {
+        border-left-color: var(--green);
+        background: var(--green-soft);
+      }
+
+      .callout--amber {
+        border-left-color: var(--amber);
+        background: var(--amber-soft);
+      }
+
+      .callout--red {
+        border-left-color: var(--red);
+        background: var(--red-soft);
+      }
+
+      .callout--blue {
+        border-left-color: var(--blue);
+        background: var(--blue-soft);
+      }
+
+      .callout--purple {
+        border-left-color: var(--purple);
+        background: var(--purple-soft);
+      }
+
+      .mini-card {
+        padding: 1.15rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: var(--surface);
+      }
+
+      .mini-card h3,
+      .mini-card h4 {
+        margin: 0.55rem 0 0.4rem;
+      }
+
+      .mini-card p,
+      .mini-card ul,
+      .mini-card ol {
+        margin-top: 0.4rem;
+        margin-bottom: 0;
+        color: var(--muted);
+      }
+
+      ul,
+      ol {
+        padding-left: 1.35rem;
+      }
+
+      li + li {
+        margin-top: 0.35rem;
+      }
+
+      .status-table,
+      .knowledge-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+      }
+
+      .status-table th,
+      .status-table td,
+      .knowledge-table th,
+      .knowledge-table td {
+        padding: 0.8rem;
+        border: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .status-table th,
+      .knowledge-table th {
+        color: #31405a;
+        background: #edf2fa;
+      }
+
+      .status-table td,
+      .knowledge-table td {
+        color: var(--muted);
+      }
+
+      .done {
+        color: var(--green);
+        font-weight: 720;
+      }
+
+      .blocked {
+        color: var(--amber);
+        font-weight: 720;
+      }
+
+      .pending {
+        color: var(--light);
+        font-weight: 650;
+      }
+
+      .architecture {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        align-items: stretch;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .architecture__node {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 112px;
+        padding: 0.85rem;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        text-align: center;
+        background: var(--surface-soft);
+      }
+
+      .architecture__node:not(:last-child)::after {
+        position: absolute;
+        top: 50%;
+        right: -0.65rem;
+        z-index: 2;
+        color: var(--blue);
+        content: "→";
+        font-weight: 800;
+        transform: translateY(-50%);
+      }
+
+      .architecture__node strong,
+      .architecture__node small {
+        display: block;
+      }
+
+      .architecture__node small {
+        margin-top: 0.25rem;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .flow-stack {
+        display: grid;
+        gap: 0.55rem;
+        max-width: 760px;
+        margin: 1rem auto 0;
+      }
+
+      .flow-step {
+        position: relative;
+        padding: 0.85rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface-soft);
+        text-align: center;
+      }
+
+      .flow-step:not(:last-child)::after {
+        position: absolute;
+        right: 50%;
+        bottom: -1.1rem;
+        z-index: 2;
+        color: var(--blue);
+        content: "↓";
+        font-weight: 800;
+        transform: translateX(50%);
+      }
+
+      .timeline {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .timeline-item {
+        display: grid;
+        grid-template-columns: 115px minmax(0, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: var(--surface);
+      }
+
+      .timeline-item__label {
+        display: grid;
+        place-items: center;
+        min-height: 70px;
+        padding: 0.5rem;
+        border-radius: 11px;
+        color: var(--blue-dark);
+        background: var(--blue-soft);
+        text-align: center;
+        font-weight: 800;
+      }
+
+      .timeline-item h3 {
+        margin: 0;
+      }
+
+      .timeline-item p {
+        margin: 0.3rem 0 0;
+        color: var(--muted);
+      }
+
+      .timeline-item ul {
+        margin-bottom: 0;
+        color: var(--muted);
+      }
+
+      details.module,
+      details.review {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: var(--surface);
+      }
+
+      details.module + details.module,
+      details.review + details.review {
+        margin-top: 0.8rem;
+      }
+
+      details summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.15rem;
+        cursor: pointer;
+        list-style: none;
+        font-weight: 760;
+      }
+
+      details summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details summary::after {
+        flex: 0 0 auto;
+        color: var(--blue);
+        content: "+";
+        font-size: 1.35rem;
+        line-height: 1;
+      }
+
+      details[open] summary {
+        border-bottom: 1px solid var(--line);
+        background: var(--surface-soft);
+      }
+
+      details[open] summary::after {
+        content: "−";
+      }
+
+      .details-body {
+        padding: 0.2rem 1.2rem 1.25rem;
+        color: var(--muted);
+      }
+
+      .details-body h3,
+      .details-body h4 {
+        color: var(--ink);
+      }
+
+      .details-body h3 {
+        margin: 1rem 0 0.35rem;
+      }
+
+      .details-body h4 {
+        margin: 0.9rem 0 0.25rem;
+      }
+
+      .details-body p,
+      .details-body ul,
+      .details-body ol {
+        margin-top: 0.4rem;
+      }
+
+      .path-list {
+        display: grid;
+        gap: 0.45rem;
+        padding: 0;
+        list-style: none;
+      }
+
+      .path-list li {
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: #334155;
+        background: var(--surface-soft);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.82rem;
+      }
+
+      .checklist {
+        display: grid;
+        gap: 0.7rem;
+        margin-top: 1rem;
+      }
+
+      .check-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: start;
+        gap: 0.7rem;
+        padding: 0.8rem 0.9rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        cursor: pointer;
+      }
+
+      .check-item:hover {
+        border-color: #a9bfff;
+      }
+
+      .check-item input {
+        width: 1.08rem;
+        height: 1.08rem;
+        margin-top: 0.24rem;
+        accent-color: var(--blue);
+      }
+
+      .check-item span {
+        color: var(--muted);
+      }
+
+      .check-item strong {
+        display: block;
+        color: var(--ink);
+      }
+
+      .check-item:has(input:checked) {
+        border-color: #a8ddc2;
+        background: #f2fbf6;
+      }
+
+      .check-item input:checked + span {
+        color: var(--light);
+        text-decoration: line-through;
+      }
+
+      .progress-wrap {
+        margin-top: 1rem;
+      }
+
+      .progress-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.4rem;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 650;
+      }
+
+      .progress-track {
+        overflow: hidden;
+        height: 9px;
+        border-radius: 999px;
+        background: #dfe6f2;
+      }
+
+      .progress-bar {
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--blue), var(--purple));
+        transition: width 0.25s ease;
+      }
+
+      .question-list {
+        counter-reset: question;
+        display: grid;
+        gap: 0.7rem;
+        padding: 0;
+        list-style: none;
+      }
+
+      .question-list li {
+        position: relative;
+        padding: 0.85rem 1rem 0.85rem 3rem;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        color: var(--muted);
+        background: var(--surface-soft);
+        counter-increment: question;
+      }
+
+      .question-list li::before {
+        position: absolute;
+        top: 0.83rem;
+        left: 0.9rem;
+        display: grid;
+        place-items: center;
+        width: 1.45rem;
+        height: 1.45rem;
+        border-radius: 50%;
+        color: #fff;
+        background: var(--blue);
+        content: counter(question);
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+
+      .footer {
+        margin-top: 2.5rem;
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        color: rgba(255, 255, 255, 0.84);
+        background: #17233b;
+        text-align: center;
+      }
+
+      .footer strong {
+        color: #fff;
+      }
+
+      .footer p {
+        margin: 0.35rem 0;
+      }
+
+      @media (max-width: 980px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .metrics {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .architecture {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .architecture__node:nth-child(3)::after {
+          display: none;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .topbar__inner {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 0.65rem 0;
+        }
+
+        .topbar nav {
+          width: 100%;
+        }
+
+        .two-column,
+        .three-column {
+          grid-template-columns: 1fr;
+        }
+
+        .timeline-item {
+          grid-template-columns: 1fr;
+        }
+
+        .timeline-item__label {
+          min-height: auto;
+        }
+
+        .status-table,
+        .knowledge-table {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .metrics,
+        .architecture {
+          grid-template-columns: 1fr;
+        }
+
+        .architecture__node:not(:last-child)::after {
+          top: auto;
+          right: 50%;
+          bottom: -1.05rem;
+          display: block;
+          content: "↓";
+          transform: translateX(50%);
+        }
+
+        .tool-button {
+          display: none;
+        }
+      }
+
+      @media print {
+        :root {
+          --page: #fff;
+          --shadow: none;
+        }
+
+        body {
+          background: #fff;
+          font-size: 10.5pt;
+        }
+
+        .topbar,
+        .progress-wrap,
+        .tool-button {
+          display: none;
+        }
+
+        .page {
+          width: 100%;
+          padding: 0;
+        }
+
+        .hero {
+          color: var(--ink);
+          background: #edf2fa;
+          box-shadow: none;
+        }
+
+        .hero__lead,
+        .hero__aside p,
+        .eyebrow,
+        .hero .pill {
+          color: #31405a;
+        }
+
+        .hero__aside,
+        .hero .pill {
+          border-color: #ccd5e2;
+          background: #fff;
+        }
+
+        details:not([open]) > *:not(summary) {
+          display: block;
+        }
+
+        details summary::after {
+          display: none;
+        }
+
+        .card,
+        .mini-card,
+        .metric,
+        .timeline-item,
+        details,
+        .callout {
+          break-inside: avoid;
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="topbar">
+      <div class="topbar__inner">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true">DI</span>
+          <span>Device Inspector 阶段手册</span>
+        </div>
+        <nav aria-label="页面目录">
+          <a href="#status">当前状态</a>
+          <a href="#architecture">架构</a>
+          <a href="#modules">完成模块</a>
+          <a href="#android">Android</a>
+          <a href="#review">审查</a>
+          <a href="#interview">面试复习</a>
+          <a href="#next">下一步</a>
+          <button class="tool-button" type="button" id="expand-all">全部展开</button>
+          <button class="tool-button" type="button" id="print-page">打印 / PDF</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page" id="main-content">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Vue 3 · TypeScript · Pinia · Capacitor · Android</p>
+          <h1 id="page-title">设备巡检助手<br />阶段成果与学习手册</h1>
+          <p class="hero__lead">
+            汇总 Day 1、Day 2 和 Day 3 Task 1 的真实完成内容：从领域类型、表单和 Pinia，到 Preferences 持久化与 Android 原生工程。
+          </p>
+          <div class="pill-row">
+            <span class="pill">✓ Web 巡检闭环</span>
+            <span class="pill">✓ Preferences 持久化</span>
+            <span class="pill">✓ Android 工程与首次 sync</span>
+            <span class="pill">当前阻塞：Android SDK</span>
+          </div>
+        </div>
+        <aside class="hero__aside">
+          <strong>现在最需要记住</strong>
+          <p>
+            Android 工程已经生成且配置正确；Debug APK 尚未产生，原因是本机缺少 Android Studio 和 SDK 36，而不是业务代码或 Capacitor 配置失败。
+          </p>
+        </aside>
+      </section>
+
+      <section class="section" id="status" aria-labelledby="status-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="status-title">当前状态：做到哪里了</h2>
+            <p>先建立准确的项目认知：哪些已经完成，哪些只完成了基础设施，哪些仍未开始。</p>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <span>已完成小任务</span>
+            <strong>7</strong>
+            <small>Day 1 × 4、Day 2 × 2、Day 3 × 1</small>
+          </div>
+          <div class="metric">
+            <span>Capacitor 平台</span>
+            <strong>Android</strong>
+            <small>8.5.0，工程已生成并同步</small>
+          </div>
+          <div class="metric">
+            <span>Android 包身份</span>
+            <strong style="font-size: 1rem">com.hugh.deviceinspector</strong>
+            <small>Gradle、Java package 和资源一致</small>
+          </div>
+          <div class="metric">
+            <span>当前构建状态</span>
+            <strong style="color: var(--amber)">待 SDK</strong>
+            <small>Gradle 已启动，SDK location not found</small>
+          </div>
+        </div>
+
+        <div class="two-column" style="margin-top: 1rem">
+          <article class="callout callout--green">
+            <h3>已经真实完成</h3>
+            <ul>
+              <li>设备列表和设备详情</li>
+              <li>类型安全的巡检表单</li>
+              <li>Draft → Record 提交边界</li>
+              <li>Pinia 内存历史</li>
+              <li>巡检历史列表和空状态</li>
+              <li>Preferences 保存、恢复、版本和运行时校验</li>
+              <li>Capacitor Android 工程、插件注册和首次 sync</li>
+            </ul>
+          </article>
+          <article class="callout callout--amber">
+            <h3>当前尚未完成</h3>
+            <ul>
+              <li>Android Studio 和 SDK 36 环境</li>
+              <li>Debug APK</li>
+              <li>模拟器或真机启动</li>
+              <li>Camera 与 Filesystem</li>
+              <li>Device、Network 和 Local Notifications</li>
+              <li>运行时权限流程</li>
+              <li>Release APK/AAB、签名和版本管理</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="card card--padded" style="margin-top: 1rem">
+          <table class="status-table">
+            <thead>
+              <tr>
+                <th>阶段</th>
+                <th>任务</th>
+                <th>状态</th>
+                <th>可验证结果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Day 1</td>
+                <td>巡检领域模型</td>
+                <td class="done">已完成</td>
+                <td>Draft 与 Record 类型边界，构建通过</td>
+              </tr>
+              <tr>
+                <td>Day 1</td>
+                <td>类型安全表单</td>
+                <td class="done">已完成</td>
+                <td>设备详情可进入巡检表单，条件校验有效</td>
+              </tr>
+              <tr>
+                <td>Day 1</td>
+                <td>提交边界与 Pinia</td>
+                <td class="done">已完成</td>
+                <td>生成 UUID、ISO 时间并保存会话记录</td>
+              </tr>
+              <tr>
+                <td>Day 2</td>
+                <td>巡检历史页面</td>
+                <td class="done">已完成</td>
+                <td>空状态、设备关联、时间本地化</td>
+              </tr>
+              <tr>
+                <td>Day 2</td>
+                <td>Preferences 持久化</td>
+                <td class="done">已完成</td>
+                <td>刷新恢复、损坏 JSON 防护、写入失败一致性</td>
+              </tr>
+              <tr>
+                <td>Day 3</td>
+                <td>Capacitor Android 基础</td>
+                <td class="done">工程完成</td>
+                <td>add、sync、doctor 均成功</td>
+              </tr>
+              <tr>
+                <td>Day 3</td>
+                <td>Debug APK</td>
+                <td class="blocked">环境待完成</td>
+                <td>缺 Android Studio / SDK 36</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="architecture" aria-labelledby="architecture-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="architecture-title">一张图理解当前架构</h2>
+            <p>面试时不要只说“用了 Vue、Pinia 和 Capacitor”，要能解释每一层负责什么。</p>
+          </div>
+        </div>
+
+        <div class="card card--padded">
+          <div class="architecture" aria-label="当前应用分层">
+            <div class="architecture__node">
+              <span><strong>Vue Views</strong><small>展示、输入、错误反馈</small></span>
+            </div>
+            <div class="architecture__node">
+              <span><strong>Pinia Store</strong><small>响应式状态与流程编排</small></span>
+            </div>
+            <div class="architecture__node">
+              <span><strong>Domain Service</strong><small>校验、标准化、实体创建</small></span>
+            </div>
+            <div class="architecture__node">
+              <span><strong>Storage Service</strong><small>JSON、版本、运行时守卫</small></span>
+            </div>
+            <div class="architecture__node">
+              <span><strong>Capacitor Plugin</strong><small>Preferences 跨平台桥接</small></span>
+            </div>
+            <div class="architecture__node">
+              <span><strong>Android</strong><small>WebView 与原生存储</small></span>
+            </div>
+          </div>
+
+          <div class="two-column" style="margin-top: 1.2rem">
+            <article class="mini-card">
+              <span class="pill">提交方向</span>
+              <h3>用户保存一条记录</h3>
+              <div class="flow-stack">
+                <div class="flow-step">InspectionDraft</div>
+                <div class="flow-step">校验、trim、UUID、ISO 时间</div>
+                <div class="flow-step">InspectionRecord</div>
+                <div class="flow-step">Preferences 写入 nextRecords</div>
+                <div class="flow-step">写入成功后更新 Pinia</div>
+              </div>
+            </article>
+            <article class="mini-card">
+              <span class="pill">启动方向</span>
+              <h3>应用恢复本地历史</h3>
+              <div class="flow-stack">
+                <div class="flow-step">main.ts 启动 Store initialize</div>
+                <div class="flow-step">Preferences.get</div>
+                <div class="flow-step">JSON.parse → unknown</div>
+                <div class="flow-step">版本与字段运行时校验</div>
+                <div class="flow-step">恢复并排序 Pinia records</div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="three-column" style="margin-top: 1rem">
+          <article class="mini-card">
+            <span class="pill">Pinia</span>
+            <h3>运行时副本</h3>
+            <p>负责跨页面响应式共享。路由跳转保留，但单独使用时刷新会丢失。</p>
+          </article>
+          <article class="mini-card">
+            <span class="pill">Preferences</span>
+            <h3>轻量持久化来源</h3>
+            <p>保存小型 JSON 元数据。应用重启可恢复，但不适合图片和大量复杂查询。</p>
+          </article>
+          <article class="mini-card">
+            <span class="pill">Filesystem</span>
+            <h3>后续照片文件</h3>
+            <p>尚未接入。未来真实照片放 Filesystem，Preferences 只保存文件路径。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="modules" aria-labelledby="modules-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="modules-title">已完成模块：按需展开阅读</h2>
+            <p>建议每次只展开一个模块，先复述设计，再对照代码和面试表达。</p>
+          </div>
+        </div>
+
+        <details class="module" open>
+          <summary>模块 1：巡检领域类型——草稿与正式记录</summary>
+          <div class="details-body">
+            <h3>解决的问题</h3>
+            <p>正在填写的表单允许暂时不完整；进入历史的数据必须完整。两者不能用一个“所有字段可选”的接口混在一起。</p>
+            <pre><code>type InspectionResult =
+  | 'passed'
+  | 'issue_found'
+
+interface InspectionDraft {
+  deviceId: string
+  inspectorName: string
+  result: InspectionResult | null
+  notes: string
+  photoPaths: string[]
+}
+
+interface InspectionRecord {
+  id: string
+  deviceId: string
+  inspectorName: string
+  result: InspectionResult
+  notes: string
+  photoPaths: string[]
+  inspectedAt: string
+}</code></pre>
+            <div class="two-column">
+              <div class="callout callout--green">
+                <h4>草稿允许</h4>
+                <ul>
+                  <li><code>result: null</code></li>
+                  <li>巡检人暂时为空字符串</li>
+                  <li>没有 ID</li>
+                  <li>没有最终巡检时间</li>
+                </ul>
+              </div>
+              <div class="callout callout--blue">
+                <h4>正式记录要求</h4>
+                <ul>
+                  <li>结果必须是合法联合类型</li>
+                  <li>ID 必须存在</li>
+                  <li>巡检时间必须存在</li>
+                  <li>可以进入历史和持久化</li>
+                </ul>
+              </div>
+            </div>
+            <h4>面试必须能说</h4>
+            <p><code>Partial&lt;InspectionRecord&gt;</code> 会让所有字段都可能不存在，无法准确表达表单草稿的稳定结构；显式 Draft/Record 虽有少量重复，但业务语义更强。</p>
+            <ul class="path-list">
+              <li>src/types/inspection.ts</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="module">
+          <summary>模块 2：类型安全的 Vue 巡检表单</summary>
+          <div class="details-body">
+            <h3>核心选择</h3>
+            <p>草稿暂时只在当前页面消费，因此使用页面局部的 <code>reactive&lt;InspectionDraft&gt;</code>，没有过早把所有输入字段放进 Pinia。</p>
+            <pre><code>const draft = reactive&lt;InspectionDraft&gt;(
+  createDraft(props.id),
+)</code></pre>
+            <h4>运行时规则</h4>
+            <ul>
+              <li>巡检人不能只有空格。</li>
+              <li>必须选择巡检结果。</li>
+              <li>选择“发现问题”时必须填写问题说明。</li>
+              <li>Camera 区域只是占位，不伪造原生能力。</li>
+            </ul>
+            <h4>路由复用保护</h4>
+            <pre><code>watch(
+  () =&gt; props.id,
+  (nextId) =&gt; {
+    Object.assign(draft, createDraft(nextId))
+    void deviceStore.loadDeviceById(nextId)
+  },
+  { immediate: true },
+)</code></pre>
+            <p>设备 ID 变化时重置草稿，防止设备 A 的备注和结果污染设备 B。</p>
+            <h4>面试必须能说</h4>
+            <p>状态是否进入 Pinia，要看生命周期和消费者范围；不是所有 <code>ref/reactive</code> 都应该全局化。</p>
+            <ul class="path-list">
+              <li>src/views/InspectionFormView.vue</li>
+              <li>src/router/index.ts</li>
+              <li>src/views/DeviceDetailView.vue</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="module">
+          <summary>模块 3：提交边界与 Pinia 内存记录</summary>
+          <div class="details-body">
+            <h3>为什么页面不能直接 push</h3>
+            <p>草稿可能不完整，也没有 ID 和时间。提交边界统一完成校验、标准化和实体创建，Store 只接收合法正式记录。</p>
+            <pre><code>type InspectionRecordCreationResult =
+  | { success: true; record: InspectionRecord }
+  | {
+      success: false
+      errors: InspectionValidationErrors
+    }</code></pre>
+            <h4>创建记录时做了什么</h4>
+            <ul>
+              <li><code>trim()</code> 清理巡检人和备注。</li>
+              <li><code>crypto.randomUUID()</code> 生成实体 ID。</li>
+              <li><code>new Date().toISOString()</code> 生成标准时间。</li>
+              <li><code>[...draft.photoPaths]</code> 避免草稿与历史共享可变数组。</li>
+            </ul>
+            <h4>Pinia 的角色</h4>
+            <pre><code>const records = ref&lt;InspectionRecord[]&gt;([])
+const recordCount = computed(
+  () =&gt; records.value.length,
+)</code></pre>
+            <p>当时这一步只有内存状态：路由跳转保留，页面刷新丢失。这个限制随后由 Preferences 模块解决。</p>
+            <ul class="path-list">
+              <li>src/services/inspectionService.ts</li>
+              <li>src/stores/inspectionStore.ts</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="module">
+          <summary>模块 4：巡检历史、设备关联与日期工具</summary>
+          <div class="details-body">
+            <h3>展示层关联</h3>
+            <p>巡检记录只保存 <code>deviceId</code>，历史页面用 Device Store 建立当前设备信息关联。</p>
+            <pre><code>const deviceById = computed(
+  () =&gt; new Map(
+    devices.value.map(
+      (device) =&gt; [device.id, device],
+    ),
+  ),
+)
+
+const historyItems = computed(() =&gt;
+  records.value.map((record) =&gt; ({
+    record,
+    device:
+      deviceById.value.get(record.deviceId)
+      ?? null,
+  })),
+)</code></pre>
+            <h4>为什么允许设备为 null</h4>
+            <ul>
+              <li>设备接口可能失败。</li>
+              <li>设备可能已经删除。</li>
+              <li>旧记录可能关联未知设备。</li>
+              <li>历史主数据仍可回退显示 deviceId。</li>
+            </ul>
+            <h4>日期集中处理</h4>
+            <p>第三个页面需要日期展示时，提取 <code>formatDateTime()</code>，同时处理空值和非法日期，不引入日期库。</p>
+            <h4>当前语义</h4>
+            <p>历史显示设备“当前名称和位置”。如果生产审计要求保留巡检当时的设备信息，应改为保存 <code>deviceSnapshot</code>。</p>
+            <ul class="path-list">
+              <li>src/views/InspectionHistoryView.vue</li>
+              <li>src/utils/date.ts</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="module">
+          <summary>模块 5：Capacitor Preferences 持久化</summary>
+          <div class="details-body">
+            <h3>存储格式</h3>
+            <pre><code>{
+  "version": 1,
+  "records": [
+    {
+      "id": "inspection-...",
+      "deviceId": "dev-001",
+      "inspectorName": "赵六",
+      "result": "passed",
+      "notes": "",
+      "photoPaths": [],
+      "inspectedAt": "2026-08-09T07:35:10.000Z"
+    }
+  ]
+}</code></pre>
+            <h4>为什么 JSON.parse 后是 unknown</h4>
+            <p>TypeScript 接口不会验证本地 JSON。当前代码把解析结果视为 <code>unknown</code>，再检查对象、版本、数组和每个字段，不用 <code>as InspectionRecord[]</code> 假装安全。</p>
+            <h4>一致性策略</h4>
+            <pre><code>const nextRecords = [
+  creationResult.record,
+  ...records.value,
+]
+
+await saveInspectionRecords(nextRecords)
+records.value = nextRecords</code></pre>
+            <p>先写 Preferences，成功后更新 Pinia。写入失败时，界面不会显示一条实际上没有落盘的记录。</p>
+            <h4>真实验证</h4>
+            <ul>
+              <li>刷新后记录仍存在。</li>
+              <li>Web key 为 <code>CapacitorStorage.device-inspector.inspection-records</code>。</li>
+              <li>损坏 JSON 会显示可重试错误。</li>
+              <li>恢复原 payload 后记录重新出现。</li>
+              <li>模拟写入失败时，Pinia 数量不会增加。</li>
+            </ul>
+            <h4>限制</h4>
+            <p>所有记录保存在一个 JSON 字符串中，适合小型求职项目；大量记录、复杂查询和分页应迁移到 SQLite。</p>
+            <ul class="path-list">
+              <li>src/services/inspectionStorageService.ts</li>
+              <li>src/stores/inspectionStore.ts</li>
+              <li>src/main.ts</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="module">
+          <summary>模块 6：Capacitor Android 工程基础</summary>
+          <div class="details-body">
+            <h3>当前配置</h3>
+            <pre><code>const config: CapacitorConfig = {
+  appId: 'com.hugh.deviceinspector',
+  appName: 'Device Inspector',
+  webDir: 'dist',
+}</code></pre>
+            <h4>已完成命令</h4>
+            <pre><code>pnpm add @capacitor/android@8.5.0
+pnpm build
+pnpm exec cap add android
+pnpm android:sync
+pnpm exec cap doctor</code></pre>
+            <h4>配置核对</h4>
+            <ul>
+              <li>applicationId / namespace：<code>com.hugh.deviceinspector</code></li>
+              <li>MainActivity package：<code>com.hugh.deviceinspector</code></li>
+              <li>应用名：Device Inspector</li>
+              <li>minSdk：24</li>
+              <li>compileSdk / targetSdk：36</li>
+              <li>PreferencesPlugin 已注册</li>
+              <li>Manifest 当前只有 INTERNET 权限</li>
+            </ul>
+            <h4>Gradle 结果</h4>
+            <p>Gradle 8.14.3 已成功下载并启动，项目配置完成；在准备 Java 编译依赖时因没有 Android SDK 路径而停止。</p>
+            <pre><code>SDK location not found.
+Define ANDROID_HOME or android/local.properties</code></pre>
+            <h4>安全处理</h4>
+            <p>Android gitignore 已启用 <code>*.jks</code>、<code>*.keystore</code> 和 <code>key.properties</code>，防止未来误提交 Release 私钥。</p>
+            <ul class="path-list">
+              <li>capacitor.config.ts</li>
+              <li>android/app/build.gradle</li>
+              <li>android/app/src/main/AndroidManifest.xml</li>
+              <li>android/app/src/main/java/com/hugh/deviceinspector/MainActivity.java</li>
+              <li>android/variables.gradle</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <section class="section" id="android" aria-labelledby="android-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="android-title">Android：你需要真正理解的工作流</h2>
+            <p>Capacitor 不是把 Vue 转成 Java，而是把构建后的 Web App 装进原生 WebView。</p>
+          </div>
+        </div>
+
+        <div class="card card--padded">
+          <div class="flow-stack">
+            <div class="flow-step"><strong>Vue / TypeScript 源码</strong><br /><small>src/ 中的页面、Store 和 Service</small></div>
+            <div class="flow-step"><strong>vue-tsc + Vite</strong><br /><small>类型检查与生产构建</small></div>
+            <div class="flow-step"><strong>dist/</strong><br /><small>HTML、CSS、JavaScript 生产资源</small></div>
+            <div class="flow-step"><strong>cap sync android</strong><br /><small>复制 Web 资源、配置与插件</small></div>
+            <div class="flow-step"><strong>android/app/src/main/assets/public</strong><br /><small>Android App 内置 Web 资源</small></div>
+            <div class="flow-step"><strong>BridgeActivity + WebView</strong><br /><small>运行 Vue，并通过 Bridge 调用原生插件</small></div>
+            <div class="flow-step"><strong>Gradle → APK/AAB</strong><br /><small>当前等待 Android SDK 36</small></div>
+          </div>
+        </div>
+
+        <div class="three-column" style="margin-top: 1rem">
+          <article class="mini-card">
+            <span class="pill">一次性</span>
+            <h3>cap add android</h3>
+            <p>创建原生平台目录。Android 已存在时不要反复执行。</p>
+          </article>
+          <article class="mini-card">
+            <span class="pill">日常使用</span>
+            <h3>pnpm android:sync</h3>
+            <p>先构建 Vue，再复制资源并更新 Android 原生插件。</p>
+          </article>
+          <article class="mini-card">
+            <span class="pill">安装 IDE 后</span>
+            <h3>pnpm android:open</h3>
+            <p>使用 Android Studio 打开 <code>android/</code> 工程。</p>
+          </article>
+        </div>
+
+        <div class="two-column" style="margin-top: 1rem">
+          <article class="callout callout--blue">
+            <h3>可以修改</h3>
+            <ul>
+              <li><code>capacitor.config.ts</code></li>
+              <li>Vue / TypeScript 源码</li>
+              <li>需要权限时修改 AndroidManifest</li>
+              <li>确有原生行为时修改 MainActivity</li>
+            </ul>
+          </article>
+          <article class="callout callout--amber">
+            <h3>不要手改生成资源</h3>
+            <ul>
+              <li><code>android/app/src/main/assets/public</code></li>
+              <li><code>capacitor.config.json</code></li>
+              <li><code>capacitor.plugins.json</code></li>
+              <li>这些会被下次 sync 覆盖</li>
+            </ul>
+          </article>
+        </div>
+
+        <table class="knowledge-table">
+          <thead>
+            <tr>
+              <th>Android 配置</th>
+              <th>当前值</th>
+              <th>作用</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>applicationId</td>
+              <td><code>com.hugh.deviceinspector</code></td>
+              <td>Android 和应用商店识别 App 的唯一身份</td>
+            </tr>
+            <tr>
+              <td>minSdk</td>
+              <td>24</td>
+              <td>最低 Android 7.0，可安装设备下限</td>
+            </tr>
+            <tr>
+              <td>compileSdk</td>
+              <td>36</td>
+              <td>编译时使用的 Android SDK，需要本机安装 Platform 36</td>
+            </tr>
+            <tr>
+              <td>targetSdk</td>
+              <td>36</td>
+              <td>应用声明适配的 Android 行为规则版本</td>
+            </tr>
+            <tr>
+              <td>versionCode</td>
+              <td>1</td>
+              <td>商店和系统比较版本的整数，后续发布必须递增</td>
+            </tr>
+            <tr>
+              <td>versionName</td>
+              <td>1.0</td>
+              <td>用户看到的版本名称</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section" id="review" aria-labelledby="review-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="review-title">阶段 Code Review</h2>
+            <p>这里列出当前做得正确的部分、已知限制和后续必须处理的风险。</p>
+          </div>
+        </div>
+
+        <details class="review" open>
+          <summary>1. 架构审查</summary>
+          <div class="details-body">
+            <h4>正确点</h4>
+            <ul>
+              <li>页面、Store、Domain Service、Storage Service、Plugin 职责分离。</li>
+              <li>原生插件没有散落到多个 Vue 页面。</li>
+              <li>Preferences 是持久化来源，Pinia 是响应式副本。</li>
+              <li>Android 不依赖固定开发服务器 URL。</li>
+              <li>appId 在 Gradle、Java package 和资源中一致。</li>
+            </ul>
+            <h4>已知限制</h4>
+            <ul>
+              <li>所有历史记录存在一个 JSON 中，数据量大时应迁移 SQLite。</li>
+              <li>设备历史显示当前设备信息，没有保存审计快照。</li>
+              <li>Camera、Filesystem 和跨存储一致性尚未设计实现。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="review">
+          <summary>2. TypeScript 审查</summary>
+          <div class="details-body">
+            <ul>
+              <li>没有使用 <code>any</code>。</li>
+              <li>巡检结果使用联合类型。</li>
+              <li>草稿和正式记录分开。</li>
+              <li>提交结果使用 discriminated union。</li>
+              <li>Preferences JSON 以 unknown 进入运行时守卫。</li>
+              <li>日期字符串、ID 和文件路径仍是普通 string，运行时约束由边界保证。</li>
+              <li>未来外部 API 数据同样不能只靠 Axios 泛型假装已验证。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="review">
+          <summary>3. Vue 与状态管理审查</summary>
+          <div class="details-body">
+            <ul>
+              <li>页面局部草稿没有过早全局化。</li>
+              <li>Store 状态通过 <code>storeToRefs</code> 解构。</li>
+              <li>历史展示项使用 computed 派生，没有复制第二份可变历史。</li>
+              <li>初始化、加载、提交和存储错误被区分。</li>
+              <li>保存按钮在初始化和提交期间禁用。</li>
+              <li>当前 records 仍可被外部直接修改；业务扩大后可只暴露只读 getter 和 action。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="review">
+          <summary>4. 异常处理审查</summary>
+          <div class="details-body">
+            <h4>已经处理</h4>
+            <ul>
+              <li>表单字段错误</li>
+              <li>设备不存在或设备加载失败</li>
+              <li>Preferences get/set 失败</li>
+              <li>损坏 JSON、未知版本和字段类型错误</li>
+              <li>初始化期间提交和重复提交</li>
+              <li>非法日期降级</li>
+              <li>SDK 缺失导致的 Gradle 失败</li>
+            </ul>
+            <h4>后续必须处理</h4>
+            <ul>
+              <li>Camera 取消与权限拒绝</li>
+              <li>Filesystem 写入失败和文件丢失</li>
+              <li>Preferences 元数据成功但照片保存失败</li>
+              <li>Android 13+ 通知权限</li>
+              <li>应用生命周期中断</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="review">
+          <summary>5. Android 与安全审查</summary>
+          <div class="details-body">
+            <ul>
+              <li>当前 Manifest 只有 INTERNET，没有提前堆权限。</li>
+              <li>keystore、keystore 文件和 key.properties 已加入忽略。</li>
+              <li>Release 当前未配置签名，不能当作正式发布包。</li>
+              <li><code>minifyEnabled false</code> 暂时保留，Day 5 再决定 R8/ProGuard。</li>
+              <li><code>allowBackup=true</code> 是模板默认值，Release 前需根据本地数据敏感性审查。</li>
+              <li>模板测试包仍为 <code>com.getcapacitor.myapp</code>，不影响主应用，后续可整理。</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <section class="section" id="interview" aria-labelledby="interview-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="interview-title">面试复习：你必须能讲清楚</h2>
+            <p>不要背代码，要围绕业务约束、状态生命周期、平台边界和失败策略解释。</p>
+          </div>
+        </div>
+
+        <div class="three-column">
+          <article class="mini-card">
+            <span class="pill">TypeScript</span>
+            <h3>草稿与实体</h3>
+            <p>为什么 Draft 允许 null，而 Record 必须完整；为什么不使用所有字段可选的单一接口。</p>
+          </article>
+          <article class="mini-card">
+            <span class="pill">状态管理</span>
+            <h3>Pinia 与 Preferences</h3>
+            <p>Pinia 负责响应式运行时状态，Preferences 负责应用重启后的轻量持久化。</p>
+          </article>
+          <article class="mini-card">
+            <span class="pill">Capacitor</span>
+            <h3>Web 与 Native</h3>
+            <p>Vue 构建到 dist，再同步进 Android WebView，通过 Bridge 调用原生插件。</p>
+          </article>
+        </div>
+
+        <div class="card card--padded" style="margin-top: 1rem">
+          <h3 style="margin-top: 0">高频面试问题</h3>
+          <ol class="question-list">
+            <li>为什么巡检表单和巡检历史记录不使用同一个所有字段可选的接口？</li>
+            <li>Pinia 和 Capacitor Preferences 分别解决什么问题？为什么不能只使用其中一个？</li>
+            <li>为什么 <code>JSON.parse(value) as InspectionRecord[]</code> 不安全？</li>
+            <li>提交记录时为什么先写 Preferences，再更新 Pinia？反过来需要什么回滚策略？</li>
+            <li>为什么历史记录只保存 deviceId？什么时候应该保存设备快照？</li>
+            <li><code>cap add</code>、<code>cap copy</code> 和 <code>cap sync</code> 的区别是什么？</li>
+            <li>Capacitor App 与普通 Vue SPA 的运行方式有什么区别？</li>
+            <li>appId、Android applicationId、namespace 和 Java package 有什么关系？</li>
+            <li>minSdk、compileSdk、targetSdk 分别控制什么？</li>
+            <li>为什么照片不能以 Base64 形式保存到 Preferences？</li>
+          </ol>
+        </div>
+
+        <div class="two-column" style="margin-top: 1rem">
+          <article class="callout callout--purple">
+            <h3>综合解释练习</h3>
+            <p>
+              请用 2～3 分钟解释：用户点击保存后，一条 InspectionDraft 如何经过 Service、Store 和 Preferences 成为可在应用重启后恢复的 InspectionRecord？
+            </p>
+          </article>
+          <article class="callout callout--blue">
+            <h3>Android 解释练习</h3>
+            <p>
+              请用 2～3 分钟解释：一个 Vue 页面修改后，如何经过 Vite、dist、cap sync、Android assets、WebView 和 Gradle 最终进入 APK？
+            </p>
+          </article>
+        </div>
+
+        <table class="knowledge-table">
+          <thead>
+            <tr>
+              <th>术语</th>
+              <th>一句话解释</th>
+              <th>不要混淆</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>InspectionDraft</td>
+              <td>用户正在编辑、允许暂时不完整的表单状态</td>
+              <td>不是可直接进入历史的正式记录</td>
+            </tr>
+            <tr>
+              <td>InspectionRecord</td>
+              <td>通过提交边界后具有 ID、合法结果和时间的实体</td>
+              <td>不是页面输入对象的简单类型断言</td>
+            </tr>
+            <tr>
+              <td>Pinia</td>
+              <td>Vue 应用运行期间的响应式共享状态</td>
+              <td>不等于持久化数据库</td>
+            </tr>
+            <tr>
+              <td>Preferences</td>
+              <td>跨平台轻量 key/value 持久化</td>
+              <td>不适合大文件和复杂查询</td>
+            </tr>
+            <tr>
+              <td>Capacitor Bridge</td>
+              <td>连接 WebView JavaScript 与原生插件的桥梁</td>
+              <td>不是把 Vue 编译成 Java</td>
+            </tr>
+            <tr>
+              <td>appId</td>
+              <td>Android/商店识别应用的稳定唯一身份</td>
+              <td>不同于用户看到的 appName</td>
+            </tr>
+            <tr>
+              <td>cap sync</td>
+              <td>复制 Web 构建产物并更新原生插件与依赖</td>
+              <td>不同于只创建平台的 cap add</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section" id="next" aria-labelledby="next-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="next-title">下一步：Android Studio 与第一份 Debug APK</h2>
+            <p>当前不应该开始 Camera。先把 Android 工具链、APK 和设备运行闭环做实。</p>
+          </div>
+        </div>
+
+        <div class="two-column">
+          <article class="card card--padded">
+            <h3 style="margin-top: 0">环境准备清单</h3>
+            <div class="checklist" data-checklist="android-setup">
+              <label class="check-item">
+                <input type="checkbox" data-check-id="install-studio" />
+                <span><strong>安装 Android Studio</strong>版本 2025.2.1 或更新版本。</span>
+              </label>
+              <label class="check-item">
+                <input type="checkbox" data-check-id="install-sdk36" />
+                <span><strong>安装 Android SDK Platform 36</strong>匹配当前 compileSdk。</span>
+              </label>
+              <label class="check-item">
+                <input type="checkbox" data-check-id="install-tools" />
+                <span><strong>安装构建工具</strong>Build-Tools、Platform-Tools、Command-line Tools。</span>
+              </label>
+              <label class="check-item">
+                <input type="checkbox" data-check-id="open-project" />
+                <span><strong>打开 Android 工程</strong>运行 <code>pnpm android:open</code>。</span>
+              </label>
+              <label class="check-item">
+                <input type="checkbox" data-check-id="gradle-sync" />
+                <span><strong>完成 Gradle Sync</strong>使用 Android Studio Embedded JDK。</span>
+              </label>
+              <label class="check-item">
+                <input type="checkbox" data-check-id="assemble-debug" />
+                <span><strong>构建 Debug APK</strong>运行 <code>./gradlew assembleDebug</code>。</span>
+              </label>
+              <label class="check-item">
+                <input type="checkbox" data-check-id="run-device" />
+                <span><strong>模拟器或真机启动</strong>验证首页、巡检和 Preferences 恢复。</span>
+              </label>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-meta">
+                <span>环境准备进度</span>
+                <span id="progress-label">0 / 7</span>
+              </div>
+              <div class="progress-track" aria-hidden="true">
+                <div class="progress-bar" id="progress-bar"></div>
+              </div>
+            </div>
+          </article>
+
+          <aside>
+            <div class="callout callout--amber">
+              <h3>安装后执行</h3>
+              <pre><code>pnpm android:sync
+pnpm android:open
+
+cd android
+./gradlew assembleDebug</code></pre>
+              <p>成功后的 APK 路径：</p>
+              <pre><code>android/app/build/outputs/apk/debug/app-debug.apk</code></pre>
+            </div>
+            <div class="callout callout--green" style="margin-top: 1rem">
+              <h3>下一任务完成标准</h3>
+              <ul>
+                <li>Gradle 构建成功。</li>
+                <li>Debug APK 真实存在。</li>
+                <li><code>adb devices</code> 能看到设备或模拟器。</li>
+                <li>App 能启动并完成一次巡检。</li>
+                <li>关闭再启动后 Preferences 记录仍存在。</li>
+              </ul>
+            </div>
+            <div class="callout callout--red" style="margin-top: 1rem">
+              <h3>这一步不要做</h3>
+              <ul>
+                <li>不要手写不存在的 sdk.dir。</li>
+                <li>不要跳过 SDK 36 直接修改 compileSdk 降级。</li>
+                <li>不要提前接 Camera 掩盖环境问题。</li>
+                <li>不要提交 local.properties 或 keystore。</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p><strong>当前结论：</strong>Web 业务闭环、持久化和 Android 工程基础已经完成。</p>
+        <p>下一步安装 Android Studio + SDK 36，完成第一份真实 Debug APK，再进入 Camera 与 Filesystem。</p>
+      </footer>
+    </main>
+
+    <script>
+      const storageKey = 'device-inspector-progress-handbook-checks'
+      const checkboxes = Array.from(document.querySelectorAll('[data-check-id]'))
+      const progressBar = document.querySelector('#progress-bar')
+      const progressLabel = document.querySelector('#progress-label')
+      const printButton = document.querySelector('#print-page')
+      const expandButton = document.querySelector('#expand-all')
+
+      function readSavedChecks() {
+        try {
+          const rawValue = window.localStorage.getItem(storageKey)
+          return rawValue ? JSON.parse(rawValue) : {}
+        } catch {
+          return {}
+        }
+      }
+
+      function saveChecks() {
+        const state = Object.fromEntries(
+          checkboxes.map((checkbox) => [checkbox.dataset.checkId, checkbox.checked]),
+        )
+
+        try {
+          window.localStorage.setItem(storageKey, JSON.stringify(state))
+        } catch {
+          // localStorage 不可用时，清单仍可在当前页面使用。
+        }
+      }
+
+      function updateProgress() {
+        const completed = checkboxes.filter((checkbox) => checkbox.checked).length
+        const total = checkboxes.length
+        const percentage = total === 0 ? 0 : Math.round((completed / total) * 100)
+
+        if (progressBar) {
+          progressBar.style.width = `${percentage}%`
+        }
+
+        if (progressLabel) {
+          progressLabel.textContent = `${completed} / ${total}`
+        }
+      }
+
+      const savedChecks = readSavedChecks()
+
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = Boolean(savedChecks[checkbox.dataset.checkId])
+        checkbox.addEventListener('change', () => {
+          saveChecks()
+          updateProgress()
+        })
+      })
+
+      let allExpanded = false
+
+      expandButton?.addEventListener('click', () => {
+        allExpanded = !allExpanded
+        document.querySelectorAll('details').forEach((details) => {
+          details.open = allExpanded
+        })
+        expandButton.textContent = allExpanded ? '全部折叠' : '全部展开'
+      })
+
+      printButton?.addEventListener('click', () => window.print())
+      updateProgress()
+    </script>
+  </body>
+</html>
