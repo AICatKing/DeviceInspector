@@ -38,6 +38,10 @@ export const useInspectionStore = defineStore('inspection', () => {
 
   const recordCount = computed(() => records.value.length)
 
+  function getRecordById(recordId: string): InspectionRecord | null {
+    return records.value.find((record) => record.id === recordId) ?? null
+  }
+
   async function initialize(): Promise<void> {
     if (loading.value) {
       return
@@ -132,6 +136,7 @@ export const useInspectionStore = defineStore('inspection', () => {
     submitting,
     storageError,
     recordCount,
+    getRecordById,
     initialize,
     submitInspection,
   }

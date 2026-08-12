@@ -139,7 +139,15 @@ function retryLoadHistory(): void {
             {{ item.record.notes }}
           </p>
 
-          <p class="record-id">记录 ID：{{ item.record.id }}</p>
+          <div class="history-card__footer">
+            <p class="record-id">记录 ID：{{ item.record.id }}</p>
+            <RouterLink
+              class="detail-link"
+              :to="{ name: 'inspection-detail', params: { id: item.record.id } }"
+            >
+              查看详情 →
+            </RouterLink>
+          </div>
         </li>
       </ul>
     </template>
@@ -419,6 +427,29 @@ a.device-name:hover {
   overflow-wrap: anywhere;
 }
 
+.history-card__footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.history-card__footer .record-id {
+  flex: 1;
+}
+
+.detail-link {
+  flex-shrink: 0;
+  color: #2563eb;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 520px) {
   .history-card__header,
   .association-error {
@@ -438,6 +469,11 @@ a.device-name:hover {
 
   .record-details {
     grid-template-columns: 1fr;
+  }
+
+  .history-card__footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 </style>
