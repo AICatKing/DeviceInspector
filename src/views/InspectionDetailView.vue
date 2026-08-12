@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { getPersistedInspectionPhotoDisplayUrl } from '../services/inspectionPhotoStorageService'
 import { useDeviceStore } from '../stores/deviceStore'
 import { useInspectionStore } from '../stores/inspectionStore'
 import { INSPECTION_RESULT_LABELS, type InspectionResult } from '../types/inspection'
@@ -16,6 +17,36 @@ const deviceStore = useDeviceStore()
 const { currentDevice, detailLoading, detailError } = storeToRefs(deviceStore)
 
 const record = computed(() => inspectionStore.getRecordById(props.id))
+const selectedPhoto = ref<InspectionPhotoItem | null>(null)
+const failedPhotoIds = ref<string[]>([])
+const previewCloseButton = ref<HTMLButtonElement | null>(null)
+const previewTrigger = ref<HTMLButtonElement | null>(null)
+
+interface InspectionPhotoItem {
+  id: string
+  index: number
+  displayUrl: string
+  alt: string
+}
+
+const photoItems = computed<InspectionPhotoItem[]>(() => {
+  const photoPaths = record.value?.photoPaths ?? []
+
+  return photoPaths.flatMap((photoPath, index) => {
+    const displayUrl = getPersistedInspectionPhotoDisplayUrl(photoPath)
+
+    if (displayUrl === null) {
+      return []
+    }
+
+    return [{
+      id: `inspection-photo-${index}`,
+      index,
+      displayUrl,
+      alt: `巡检现场照片 ${index + 1}`,
+    }]
+  })
+})
 
 watch(
   record,
@@ -40,6 +71,56 @@ function retryLoadDevice(): void {
     void deviceStore.loadDeviceById(record.value.deviceId)
   }
 }
+
+function isPhotoUnavailable(photo: InspectionPhotoItem): boolean {
+  return failedPhotoIds.value.includes(photo.id)
+}
+
+function openPhotoPreview(photo: InspectionPhotoItem, event: MouseEvent): void {
+  if (event.currentTarget instanceof HTMLButtonElement) {
+    previewTrigger.value = event.currentTarget
+  }
+
+  selectedPhoto.value = photo
+
+  void nextTick(() => previewCloseButton.value?.focus())
+}
+
+function closePhotoPreview(): void {
+  selectedPhoto.value = null
+
+  void nextTick(() => previewTrigger.value?.focus())
+}
+
+function markPhotoUnavailable(photo: InspectionPhotoItem): void {
+  if (!isPhotoUnavailable(photo)) {
+    failedPhotoIds.value = [...failedPhotoIds.value, photo.id]
+  }
+
+  if (selectedPhoto.value?.id === photo.id) {
+    closePhotoPreview()
+  }
+}
+
+function handlePreviewKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && selectedPhoto.value !== null) {
+    closePhotoPreview()
+  }
+}
+
+watch(
+  () => props.id,
+  () => {
+    selectedPhoto.value = null
+    failedPhotoIds.value = []
+  },
+)
+
+window.addEventListener('keydown', handlePreviewKeydown)
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handlePreviewKeydown)
+})
 </script>
 
 <template>
@@ -106,9 +187,34 @@ function retryLoadDevice(): void {
         <div class="photo-boundary" aria-labelledby="photo-boundary-heading">
           <h3 id="photo-boundary-heading">现场照片</h3>
           <p v-if="record.photoPaths.length === 0">本次巡检未附加现场照片。</p>
-          <p v-else>
-            已保存 {{ record.photoPaths.length }} 张照片。图片缩略图与大图预览将在下一任务接入。
-          </p>
+          <template v-else>
+            <p>点击缩略图可查看大图。</p>
+            <div class="photo-grid" aria-label="巡检现场照片列表">
+              <template v-for="photo in photoItems" :key="photo.id">
+                <div v-if="isPhotoUnavailable(photo)" class="photo-unavailable" role="status">
+                  <span aria-hidden="true">图片不可用</span>
+                  <small>照片文件无法读取</small>
+                </div>
+                <button
+                  v-else
+                  type="button"
+                  class="photo-thumbnail-button"
+                  :aria-label="`查看${photo.alt}大图`"
+                  @click="openPhotoPreview(photo, $event)"
+                >
+                  <img
+                    class="photo-thumbnail"
+                    :src="photo.displayUrl"
+                    :alt="photo.alt"
+                    @error="markPhotoUnavailable(photo)"
+                  />
+                </button>
+              </template>
+            </div>
+            <p v-if="photoItems.length === 0" class="photo-unavailable-message">
+              已记录照片数量，但照片地址无效，当前无法预览。
+            </p>
+          </template>
         </div>
 
         <p class="record-id">记录 ID：{{ record.id }}</p>
@@ -139,6 +245,28 @@ function retryLoadDevice(): void {
         <button type="button" @click="retryLoadDevice">重试</button>
       </div>
     </template>
+
+    <div
+      v-if="selectedPhoto !== null"
+      class="photo-preview-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="photo-preview-title"
+      @click.self="closePhotoPreview"
+    >
+      <section class="photo-preview-dialog">
+        <header class="photo-preview-dialog__header">
+          <h2 id="photo-preview-title">现场照片 {{ selectedPhoto.index + 1 }}</h2>
+          <button ref="previewCloseButton" type="button" @click="closePhotoPreview">关闭</button>
+        </header>
+        <img
+          class="photo-preview-image"
+          :src="selectedPhoto.displayUrl"
+          :alt="selectedPhoto.alt"
+          @error="markPhotoUnavailable(selectedPhoto)"
+        />
+      </section>
+    </div>
   </div>
 </template>
 
@@ -344,6 +472,122 @@ function retryLoadDevice(): void {
 .photo-boundary h3,
 .photo-boundary p {
   margin: 0;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.photo-thumbnail-button,
+.photo-unavailable {
+  min-height: 112px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.photo-thumbnail-button {
+  padding: 0;
+  cursor: pointer;
+}
+
+.photo-thumbnail-button:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.photo-thumbnail {
+  display: block;
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+}
+
+.photo-unavailable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-style: dashed;
+  color: #64748b;
+  background: #f1f5f9;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.photo-unavailable small {
+  color: #94a3b8;
+  font-size: 0.68rem;
+}
+
+.photo-unavailable-message {
+  color: #b45309 !important;
+}
+
+.photo-preview-overlay {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 82%);
+}
+
+.photo-preview-dialog {
+  display: flex;
+  width: min(100%, 760px);
+  max-height: calc(100vh - 2rem);
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 20px 45px rgb(15 23 42 / 35%);
+}
+
+.photo-preview-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.photo-preview-dialog__header h2 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.photo-preview-dialog__header button {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  color: #334155;
+  background: #fff;
+  cursor: pointer;
+}
+
+.photo-preview-dialog__header button:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.photo-preview-image {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  max-height: calc(100vh - 6rem);
+  object-fit: contain;
+  background: #0f172a;
 }
 
 .photo-boundary h3 {

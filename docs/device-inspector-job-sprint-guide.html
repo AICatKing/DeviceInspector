@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Device Inspector｜求职冲刺执行手册</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #172033;
+        --muted: #5d6a7e;
+        --line: #dce3ee;
+        --paper: #ffffff;
+        --canvas: #f5f7fb;
+        --primary: #2563eb;
+        --primary-soft: #eff6ff;
+        --success: #15803d;
+        --success-soft: #f0fdf4;
+        --warning: #a16207;
+        --warning-soft: #fefce8;
+        --danger: #b91c1c;
+        --danger-soft: #fef2f2;
+        --code: #0f172a;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--canvas);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.7;
+      }
+
+      .shell { max-width: 1120px; margin: 0 auto; padding: 32px 20px 64px; }
+
+      .hero {
+        padding: 42px;
+        border-radius: 22px;
+        color: #fff;
+        background: linear-gradient(135deg, #0f2f73, #2563eb 58%, #0ea5e9);
+        box-shadow: 0 18px 45px rgb(37 99 235 / 25%);
+      }
+
+      .eyebrow { margin: 0 0 10px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; }
+      h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.2; }
+      .lead { max-width: 780px; margin: 16px 0 0; font-size: 1.08rem; opacity: 0.94; }
+
+      .status-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+      .badge { padding: 5px 10px; border: 1px solid rgb(255 255 255 / 28%); border-radius: 999px; background: rgb(255 255 255 / 12%); font-size: 0.84rem; }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 22px 0;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--paper);
+      }
+
+      nav a { padding: 6px 9px; border-radius: 8px; color: var(--primary); font-size: 0.86rem; font-weight: 650; text-decoration: none; }
+      nav a:hover { background: var(--primary-soft); }
+
+      section { margin-top: 24px; padding: 30px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); box-shadow: 0 4px 18px rgb(15 23 42 / 4%); }
+      h2 { margin: 0 0 12px; font-size: 1.45rem; line-height: 1.35; }
+      h3 { margin: 28px 0 10px; font-size: 1.08rem; }
+      h4 { margin: 20px 0 8px; font-size: 0.96rem; }
+      p { margin: 10px 0; }
+      .muted { color: var(--muted); }
+
+      .callout { margin: 18px 0; padding: 15px 17px; border-left: 4px solid var(--primary); border-radius: 10px; background: var(--primary-soft); }
+      .callout.success { border-color: var(--success); background: var(--success-soft); }
+      .callout.warning { border-color: var(--warning); background: var(--warning-soft); }
+      .callout.danger { border-color: var(--danger); background: var(--danger-soft); }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 16px; }
+      .card { padding: 17px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+      .card h3 { margin: 0 0 7px; font-size: 1rem; }
+      .card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
+      .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 8px; }
+      .flow-item { position: relative; padding: 16px; border-radius: 12px; background: var(--primary-soft); color: #1e3a8a; font-size: 0.9rem; font-weight: 700; text-align: center; }
+      .flow-item:not(:last-child)::after { position: absolute; top: 50%; right: -10px; z-index: 1; color: var(--primary); content: "→"; font-size: 1.25rem; transform: translateY(-50%); }
+
+      table { width: 100%; margin: 14px 0; border-collapse: collapse; font-size: 0.9rem; }
+      th, td { padding: 11px 12px; border: 1px solid var(--line); vertical-align: top; text-align: left; }
+      th { color: #334155; background: #f8fafc; }
+      tr:nth-child(even) td { background: #fcfdff; }
+
+      ul, ol { padding-left: 1.35rem; }
+      li { margin: 6px 0; }
+      code { padding: 2px 5px; border-radius: 5px; color: #cbd5e1; background: var(--code); font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.85em; }
+      pre { overflow-x: auto; padding: 16px; border-radius: 12px; color: #dbeafe; background: var(--code); line-height: 1.55; }
+      pre code { padding: 0; color: inherit; background: transparent; }
+
+      .checklist { list-style: none; padding-left: 0; }
+      .checklist li { display: flex; gap: 9px; align-items: flex-start; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+      .checklist li:last-child { border-bottom: 0; }
+      .box { width: 18px; height: 18px; flex: 0 0 18px; margin-top: 4px; border: 2px solid #94a3b8; border-radius: 4px; }
+      .done .box { position: relative; border-color: var(--success); background: var(--success); }
+      .done .box::after { position: absolute; top: -3px; left: 3px; color: #fff; content: "✓"; font-size: 0.9rem; font-weight: 800; }
+      .done strong { color: var(--success); }
+
+      details { margin: 10px 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fbfdff; }
+      summary { cursor: pointer; color: #1e3a8a; font-weight: 700; }
+      details > :last-child { margin-bottom: 0; }
+
+      .quote { margin: 16px 0; padding: 18px; border-radius: 12px; color: #334155; background: #f8fafc; font-size: 1rem; }
+      .quote p { margin: 0; }
+      .quote p + p { margin-top: 10px; }
+      .phase { display: inline-block; padding: 3px 8px; border-radius: 999px; color: #1d4ed8; background: var(--primary-soft); font-size: 0.76rem; font-weight: 800; }
+
+      footer { padding: 28px 4px 0; color: var(--muted); font-size: 0.84rem; text-align: center; }
+
+      @media (max-width: 760px) {
+        .shell { padding: 16px 12px 42px; }
+        .hero, section { padding: 23px; border-radius: 15px; }
+        .flow { grid-template-columns: 1fr; }
+        .flow-item:not(:last-child)::after { top: auto; right: 50%; bottom: -18px; transform: translateX(50%) rotate(90deg); }
+        table { display: block; overflow-x: auto; white-space: normal; }
+      }
+
+      @media print {
+        body { background: #fff; }
+        .shell { max-width: none; padding: 0; }
+        .hero { box-shadow: none; }
+        section { break-inside: avoid; box-shadow: none; }
+        nav { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">Device Inspector / 设备巡检助手</p>
+        <h1>求职冲刺执行手册</h1>
+        <p class="lead">
+          当前目标不再是继续堆功能，而是把已经完成并经过 Android 真机验证的 Hybrid App，整理为一个可讲解、可演示、可追问、可投递的项目作品。
+        </p>
+        <div class="status-row" aria-label="项目当前状态">
+          <span class="badge">Vue 3 + TypeScript</span>
+          <span class="badge">Capacitor + Android</span>
+          <span class="badge">Release APK 已验证</span>
+          <span class="badge">Day 5 · Task 3B 已真机验收</span>
+        </div>
+      </header>
+
+      <nav aria-label="文档目录">
+        <a href="#positioning">当前定位</a>
+        <a href="#roadmap">冲刺路线</a>
+        <a href="#review">正式 Code Review</a>
+        <a href="#talk">项目讲解稿</a>
+        <a href="#questions">高频面试题</a>
+        <a href="#video">3 分钟视频</a>
+        <a href="#delivery">最终投递清单</a>
+      </nav>
+
+      <section id="positioning">
+        <span class="phase">先统一目标</span>
+        <h2>一、你现在拥有的，不只是一个 Demo</h2>
+        <p>
+          Device Inspector 已具备设备列表与详情、类型安全巡检表单、巡检历史、Preferences 本地持久化、Camera 拍照、Filesystem 照片持久化、历史照片预览、Device 与 Network 信息、本地通知，以及 Android Debug / Release 签名构建和真机验证。
+        </p>
+        <div class="callout success">
+          <strong>当前阶段的核心判断：</strong>功能闭环已经足够用于 Vue 3 + TypeScript + Capacitor 前端岗位展示。接下来的高价值工作，是证明你理解每个设计决策，并能够稳定地把项目展示给面试官。
+        </div>
+        <div class="grid">
+          <article class="card"><h3>能解释</h3><p>讲得清业务场景、技术选型、分层架构、数据流、边界与取舍。</p></article>
+          <article class="card"><h3>能调试</h3><p>能讲真实 Android 文件存储问题的定位过程，而不是只描述“后来修好了”。</p></article>
+          <article class="card"><h3>能展示</h3><p>用真机完成从拍照、提交到离线历史照片预览的完整演示。</p></article>
+          <article class="card"><h3>能交付</h3><p>有 README、架构图、Release APK / AAB、构建命令和已知边界说明。</p></article>
+        </div>
+      </section>
+
+      <section id="roadmap">
+        <span class="phase">执行顺序</span>
+        <h2>二、求职冲刺路线图</h2>
+        <p class="muted">按顺序完成即可，不要同时开启大量新功能或学习主题。</p>
+        <div class="flow" aria-label="求职冲刺流程">
+          <div class="flow-item">真机最终验收<br /><small>已完成</small></div>
+          <div class="flow-item">正式 Code Review<br /><small>只审查，不改代码</small></div>
+          <div class="flow-item">讲解稿 + 高频题<br /><small>建立可追问表达</small></div>
+          <div class="flow-item">视频 + 投递材料<br /><small>形成作品集闭环</small></div>
+        </div>
+        <h3>建议节奏：5～7 个高质量工作日</h3>
+        <table>
+          <thead><tr><th>时间</th><th>唯一重点</th><th>可交付成果</th><th>完成标准</th></tr></thead>
+          <tbody>
+            <tr><td>第 1 天</td><td>正式 Code Review</td><td>分级 Review 报告</td><td>知道哪些问题要修、哪些明确不做</td></tr>
+            <tr><td>第 2 天</td><td>修复必要问题 + 最终冒烟</td><td>稳定 Release APK</td><td>核心链路可在真机连续演示</td></tr>
+            <tr><td>第 3 天</td><td>项目讲解稿</td><td>30 秒、3 分钟、深挖回答</td><td>不看稿也能顺畅说出主线</td></tr>
+            <tr><td>第 4 天</td><td>Vue / TS / Pinia 题</td><td>项目关联问答卡</td><td>每题都能结合本项目回答</td></tr>
+            <tr><td>第 5 天</td><td>Capacitor / Android 题</td><td>原生能力与排障问答卡</td><td>能解释相机、文件、权限、打包</td></tr>
+            <tr><td>第 6 天</td><td>README / 架构图 / 视频</td><td>可投递材料</td><td>3 分钟内展示完整价值</td></tr>
+            <tr><td>第 7 天</td><td>模拟面试</td><td>薄弱题清单与第二版表达</td><td>能应对跳跃式追问</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="review">
+        <span class="phase">下一件正式任务</span>
+        <h2>三、正式 Code Review：先审查，不直接修改</h2>
+        <p>
+          Review 的目的不是“挑毛病”，而是用团队协作和生产项目的标准，确认当前项目的可靠性与边界。完成 Review 后，再为每一项建议决定：立即修、记录后续、或明确不做。
+        </p>
+        <div class="callout warning">
+          <strong>规则：</strong>在 Review 报告输出前，不因为“看起来更优雅”而重构。先收集证据、说明影响、给出选项，再决定是否改变代码。
+        </div>
+        <table>
+          <thead><tr><th>维度</th><th>审查问题</th><th>你需要能说的话</th></tr></thead>
+          <tbody>
+            <tr><td>架构</td><td>View、Store、Service、Capacitor Plugin 的职责是否单一？依赖是否从页面流向服务？</td><td>“原生调用被收敛在 Service，页面只处理展示与交互。”</td></tr>
+            <tr><td>TypeScript</td><td>外部 JSON 是否先按 <code>unknown</code> 校验？是否存在隐式 <code>any</code>？业务状态是否有联合类型？</td><td>“类型断言不等于运行时可信，所以持久化数据先校验。”</td></tr>
+            <tr><td>Vue</td><td><code>computed</code>、<code>watch</code>、生命周期与响应式状态是否有清晰用途？事件是否解绑？</td><td>“详情记录由路由 id 与 Store 数据共同派生，避免重复状态。”</td></tr>
+            <tr><td>Pinia</td><td>初始化、保存失败、重复提交与错误状态是否有统一入口？</td><td>“Pinia 管运行时响应式状态，Preferences 管跨重启持久化。”</td></tr>
+            <tr><td>异常处理</td><td>权限拒绝、文件复制失败、目录已存在、图片丢失、持久化失败如何降级？</td><td>“关键 Native 操作都有业务错误边界，失败不会让页面整体失效。”</td></tr>
+            <tr><td>可维护性</td><td>是否有重复逻辑、隐含平台假设、难以测试的耦合？</td><td>“我会区分当前 MVP 边界和真正需要立即修复的风险。”</td></tr>
+          </tbody>
+        </table>
+        <h3>Review 问题分级标准</h3>
+        <table>
+          <thead><tr><th>等级</th><th>含义</th><th>处理原则</th><th>例子</th></tr></thead>
+          <tbody>
+            <tr><td><strong>P0</strong></td><td>阻塞演示、数据丢失、崩溃、安全风险</td><td>必须修复后再录视频或投递</td><td>带照片的巡检无法提交、应用启动崩溃</td></tr>
+            <tr><td><strong>P1</strong></td><td>核心链路边缘不稳定、明显维护成本</td><td>评估后修复，优先保证真机体验</td><td>照片路径失效时页面无降级提示</td></tr>
+            <tr><td><strong>P2</strong></td><td>可优化项，不影响当前主路径</td><td>写入后续规划，不临时扩 scope</td><td>照片预览尚不支持双指缩放</td></tr>
+            <tr><td><strong>边界</strong></td><td>当前 MVP 有意未覆盖的能力</td><td>写进 README，并准备演进方案</td><td>没有云端同步、没有登录鉴权</td></tr>
+          </tbody>
+        </table>
+        <h3>Review 后的决策模板</h3>
+        <pre><code>问题：________________________________
+影响：________________________________
+证据 / 复现条件：______________________
+候选方案：A / B / C
+当前选择：立即修复 / 记录后续 / 明确不做
+选择原因：____________________________
+如果继续演进：________________________</code></pre>
+      </section>
+
+      <section id="talk">
+        <span class="phase">面试现场的主线</span>
+        <h2>四、项目讲解稿：准备三种长度</h2>
+        <p>不要背功能清单。每次介绍都要同时包含：业务目标、关键技术、真实挑战、最终交付和当前边界。</p>
+
+        <h3>1. 30～45 秒电梯版</h3>
+        <div class="quote">
+          <p>我做的是 Device Inspector，一款基于 Vue 3、TypeScript 和 Capacitor 的 Android Hybrid 设备巡检应用。</p>
+          <p>它支持设备查看、创建巡检、原生相机拍照、巡检历史本地持久化、离线照片回看、网络与设备信息展示和本地通知。项目的重点不是页面数量，而是把 Vue 的状态管理和 Capacitor 原生能力做分层集成，并最终构建成签名 Release APK，在 Android 真机完成验证。</p>
+        </div>
+
+        <h3>2. 2～3 分钟标准版结构</h3>
+        <ol>
+          <li><strong>场景：</strong>现场人员需要围绕具体设备创建巡检、拍摄现场照片，并在无网络环境中回看记录。</li>
+          <li><strong>技术选型：</strong>Vue 3 + TypeScript 负责业务 UI；Pinia 管状态；Capacitor 连接 Android Native 能力。</li>
+          <li><strong>核心链路：</strong>设备详情 → 巡检草稿 → 原生相机 → 提交边界 → Preferences / Filesystem → 历史与照片预览。</li>
+          <li><strong>分层：</strong>View → Store → Service → Capacitor Plugin，避免 Native 调用散落在页面。</li>
+          <li><strong>难点：</strong>Android 文件目录已存在时 <code>mkdir</code> 仍可能失败，导致照片提交失败；通过先 <code>stat</code>、按需创建、失败后再次确认实现幂等初始化。</li>
+          <li><strong>交付与边界：</strong>已打签名 Release APK / AAB 并真机验证；当前本地优先，尚未实现服务端同步。</li>
+        </ol>
+
+        <h3>3. 项目模块地图：应对跳跃追问</h3>
+        <pre><code>Device Inspector
+├── 页面与路由：设备列表 / 详情 / 巡检表单 / 历史 / 巡检详情
+├── 数据模型：Device / InspectionDraft / InspectionRecord
+├── 状态层：deviceStore / inspectionStore
+├── 本地持久化
+│   ├── Preferences：结构化的巡检记录 JSON
+│   └── Filesystem：现场照片文件
+├── Native Service
+│   ├── Camera / Filesystem
+│   ├── Device / Network
+│   └── Local Notifications
+└── Android 交付：权限 / ADB / 签名 / APK / AAB</code></pre>
+
+        <h3>练习方法：从背稿到表达</h3>
+        <ul class="checklist">
+          <li><span class="box"></span><span>先读标准版，理解每一句对应的代码、真机验证或取舍。</span></li>
+          <li><span class="box"></span><span>关闭文档，用自己的话讲一遍，允许措辞不同，但主线不能丢。</span></li>
+          <li><span class="box"></span><span>录音并回听，删掉“然后、就是、这个”等无效连接词。</span></li>
+          <li><span class="box"></span><span>练习被打断：随机从“为什么照片要复制”“为什么用 Preferences”开始回答。</span></li>
+          <li><span class="box"></span><span>最终做到：30 秒开场 + 3 分钟主线 + 任意模块 1 分钟深挖。</span></li>
+        </ul>
+      </section>
+
+      <section id="questions">
+        <span class="phase">不要孤立背题</span>
+        <h2>五、高频面试题：用“概念 → 项目 → 验证”回答</h2>
+        <p>每一道题都按同一结构回答：先给出准确概念，再说明项目里的落点，最后补充异常处理、验证方式或设计取舍。</p>
+        <pre><code>概念：它是什么、解决什么问题
+    ↓
+项目：我在 Device Inspector 的哪里使用
+    ↓
+验证：我如何证明它可用；失败时如何处理</code></pre>
+
+        <h3>A. Vue 3</h3>
+        <details><summary>为什么详情页的记录使用 computed 派生，而不是加载时复制一份普通变量？</summary><p><strong>答题要点：</strong><code>computed(() =&gt; getRecordById(props.id))</code> 同时依赖路由参数与 Pinia records。当路由切换或 Store 恢复持久化数据后，详情会自动更新；复制到局部变量会产生重复状态和同步风险。</p></details>
+        <details><summary>computed 和 watch 如何取舍？</summary><p><strong>答题要点：</strong>computed 用于从已有响应式数据派生值，例如当前记录、照片展示项；watch 用于副作用，例如记录变化后加载关联设备、路由变更后清空预览状态。</p></details>
+        <details><summary>为什么要在组件卸载时清理键盘事件？</summary><p><strong>答题要点：</strong>预览层监听了全局 Escape 键。若不在 <code>onBeforeUnmount</code> 移除监听，路由离开后仍可能触发旧逻辑，造成内存泄漏和错误交互。</p></details>
+
+        <h3>B. TypeScript</h3>
+        <details><summary>为什么 Preferences 读取的 JSON 不能直接断言为 InspectionRecord[]？</summary><p><strong>答题要点：</strong>JSON.parse 成功只能说明 JSON 格式正确，不代表业务结构可信。持久化数据属于外部输入，应先按 <code>unknown</code> 处理，经运行时校验后才进入应用内部状态。</p></details>
+        <details><summary>为什么区分 InspectionDraft 和 InspectionRecord？</summary><p><strong>答题要点：</strong>Draft 是表单编辑期的临时状态，可以不完整；Record 是完成校验、拥有 ID、时间和持久化照片路径的可靠业务实体。转换边界阻止非法草稿直接进入历史数据。</p></details>
+        <details><summary>unknown 和 any 的根本区别是什么？</summary><p><strong>答题要点：</strong><code>any</code> 关闭类型检查，风险向后扩散；<code>unknown</code> 强制在使用前缩窄类型，适合 Native Plugin 异常、JSON、第三方返回值等不可信边界。</p></details>
+
+        <h3>C. Pinia 与本地持久化</h3>
+        <details><summary>Pinia、Preferences、Filesystem 分别负责什么？</summary><p><strong>答题要点：</strong>Pinia 管运行期响应式状态；Preferences 存小体积结构化 JSON，跨重启恢复巡检记录；Filesystem 存较大的照片文件。记录中只保存文件 URI，实现元数据与文件分离。</p></details>
+        <details><summary>为什么不把照片转 Base64 存进 Preferences？</summary><p><strong>答题要点：</strong>Base64 会增加体积，Preferences 不适合大二进制内容，也会导致序列化、读取和内存压力上升。正确做法是文件落 Filesystem，记录只保留 URI。</p></details>
+
+        <h3>D. Capacitor / Android</h3>
+        <details><summary>为什么相机临时照片需要复制到 Directory.Data？</summary><p><strong>答题要点：</strong>Camera 返回的位置可能是系统或应用缓存，缓存可被清理；提交时复制到应用私有数据目录后，才适合作为巡检历史的长期引用，离线和重启后仍可回看。</p></details>
+        <details><summary>为什么历史照片展示前要调用 Capacitor.convertFileSrc？</summary><p><strong>答题要点：</strong>Filesystem 返回的是原生文件 URI；Vue 页面运行在 Android WebView 中，不能直接假设能加载 <code>file://</code>。该方法把原生 URI 转为 WebView 可访问 URL。转换收敛在 Service，页面不直接依赖平台细节。</p></details>
+        <details><summary>你如何处理 Android mkdir 的“目录已存在”问题？</summary><p><strong>答题要点：</strong>先用 <code>Filesystem.stat</code> 探测；目录存在则直接返回；不存在才 mkdir；mkdir 报错后再探测一次目录，因为并发请求可能已由另一条请求创建成功。这样目录初始化具备幂等性。</p></details>
+
+        <h3>E. 项目演进</h3>
+        <details><summary>如果接入服务端同步，你会怎么设计？</summary><p><strong>答题要点：</strong>保持本地优先：记录先写本地；增加同步状态和任务队列；Network 恢复后上传照片再提交元数据；失败指数退避重试；服务端返回版本号或更新时间用于冲突处理；登录鉴权与 Token 刷新单独封装。</p></details>
+        <details><summary>当前有哪些明确不做的边界？</summary><p><strong>答题要点：</strong>没有云同步、登录权限、后台孤儿文件清理、手势缩放图库和自动化端到端测试。不是忽略，而是 MVP 为保证可解释、可验证、可交付而有意控制范围；每项都有后续演进方向。</p></details>
+      </section>
+
+      <section id="video">
+        <span class="phase">作品集证据</span>
+        <h2>六、3 分钟真机演示视频</h2>
+        <p>视频不追求剪辑炫技。它的任务是在招聘方没有运行项目的情况下，证明这是一个真实可运行、可调用原生能力、可离线回看的 Android Hybrid App。</p>
+        <table>
+          <thead><tr><th>时间</th><th>画面</th><th>旁白核心句</th><th>要证明什么</th></tr></thead>
+          <tbody>
+            <tr><td>0:00–0:15</td><td>设备列表首页</td><td>“这是基于 Vue 3、TypeScript 和 Capacitor 的 Android Hybrid 巡检应用。”</td><td>项目定位与技术栈</td></tr>
+            <tr><td>0:15–0:40</td><td>设备详情</td><td>“设备详情提供巡检上下文，用户从这里进入巡检流程。”</td><td>真实业务入口</td></tr>
+            <tr><td>0:40–1:20</td><td>填写表单、原生相机拍照、回到 App</td><td>“表单先形成类型安全草稿，拍照通过 Capacitor Camera 调用 Android 原生相机。”</td><td>Native Camera</td></tr>
+            <tr><td>1:20–1:45</td><td>提交成功、本地通知</td><td>“提交时照片复制到应用私有目录，记录与文件分别持久化。”</td><td>Filesystem + Preferences + Notification</td></tr>
+            <tr><td>1:45–2:20</td><td>历史记录、详情、缩略图和大图</td><td>“离线状态下仍可回看历史与现场照片，因为照片不依赖网络或相机缓存。”</td><td>离线闭环</td></tr>
+            <tr><td>2:20–2:40</td><td>环境信息、切换网络（可选）</td><td>“Device 和 Network 信息为后续离线同步队列预留基础。”</td><td>Native Environment API</td></tr>
+            <tr><td>2:40–3:00</td><td>架构图或回到 App</td><td>“页面、Pinia、Service、Capacitor Plugin 分层，Release APK 已真机验证。”</td><td>工程交付能力</td></tr>
+          </tbody>
+        </table>
+        <h3>录制前检查</h3>
+        <ul class="checklist">
+          <li><span class="box"></span><span>准备一条带照片的历史记录，避免临场重新创建失败或等待。</span></li>
+          <li><span class="box"></span><span>相机、通知权限均已授予；电量充足；关闭无关通知和敏感信息。</span></li>
+          <li><span class="box"></span><span>提前决定是否演示断网：推荐录屏时关闭 Wi‑Fi 和移动数据后预览旧照片。</span></li>
+          <li><span class="box"></span><span>使用 Android 系统录屏、Android Studio Device Mirroring 或 scrcpy；避免另一台手机手持拍屏。</span></li>
+          <li><span class="box"></span><span>建议先录操作、再录旁白；若有失误，重新录该片段即可，不必追求一镜到底。</span></li>
+        </ul>
+      </section>
+
+      <section id="delivery">
+        <span class="phase">投递前一晚</span>
+        <h2>七、最终交付与投递检查清单</h2>
+        <h3>项目稳定性</h3>
+        <ul class="checklist">
+          <li class="done"><span class="box"></span><span><strong>已完成：</strong>Day 5 · Task 3B 真机手动验收，包括历史照片缩略图与大图预览。</span></li>
+          <li><span class="box"></span><span>从设备详情创建一条带照片的巡检，提交成功。</span></li>
+          <li><span class="box"></span><span>重启 App 后，巡检记录和照片仍可读取。</span></li>
+          <li><span class="box"></span><span>关闭网络后，历史照片仍可预览。</span></li>
+          <li><span class="box"></span><span>检查相机拒绝、照片文件异常、持久化失败时，页面反馈可理解且不崩溃。</span></li>
+        </ul>
+
+        <h3>交付材料</h3>
+        <ul class="checklist">
+          <li><span class="box"></span><span>README 包含：项目概述、技术栈、安装运行、Android 构建命令、真机验证、已知边界。</span></li>
+          <li><span class="box"></span><span>架构图包含：View → Store → Service → Capacitor Plugin，以及 Preferences / Filesystem 的数据去向。</span></li>
+          <li><span class="box"></span><span>准备签名 Release APK；AAB 作为 Google Play 或正式发布准备材料。</span></li>
+          <li><span class="box"></span><span>录制并上传 3 分钟真机演示视频，README 中放视频链接或二维码。</span></li>
+          <li><span class="box"></span><span>确认仓库不提交 keystore、<code>keystore.properties</code>、真实设备信息或敏感日志。</span></li>
+        </ul>
+
+        <h3>面试准备</h3>
+        <ul class="checklist">
+          <li><span class="box"></span><span>能在 45 秒内介绍项目定位。</span></li>
+          <li><span class="box"></span><span>能在 3 分钟内讲完业务、架构、难点、交付和边界。</span></li>
+          <li><span class="box"></span><span>能分别深挖：Draft / Record、Pinia / Preferences、Filesystem、Camera、convertFileSrc、mkdir 幂等、Release 签名。</span></li>
+          <li><span class="box"></span><span>准备两个真实难题：照片目录创建失败、原生 URI 在 WebView 的展示边界。</span></li>
+          <li><span class="box"></span><span>对每个“当前没做”的能力，都能给出合理的下一步设计，而不是说“以后再说”。</span></li>
+        </ul>
+
+        <div class="callout success">
+          <strong>最终标准：</strong>面试官不需要相信你“学过” Vue、TypeScript 或 Capacitor；他应该能从你的真机演示、架构解释、问题定位和 Release 交付中，直接看到你确实使用过这些能力。
+        </div>
+      </section>
+
+      <footer>
+        Device Inspector 求职冲刺执行手册 · 以“可解释、可调试、可展示、可交付”为完成标准
+      </footer>
+    </main>
+  </body>
+</html>

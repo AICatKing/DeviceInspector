@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core'
 import { Directory, Filesystem } from '@capacitor/filesystem'
 import type { TemporaryCameraPhoto } from './cameraService'
 
@@ -26,6 +27,26 @@ export class InspectionPhotoStorageError extends Error {
 
 export interface InspectionPhotoCleanupResult {
   failedPaths: string[]
+}
+
+/**
+ * 将持久化照片的原生 URI 转为 WebView 可加载的地址。
+ *
+ * InspectionRecord 保存的是 Filesystem 返回的原生 URI；View 不应直接处理
+ * `file://` 等平台细节，而应使用这个展示边界生成图片地址。
+ */
+export function getPersistedInspectionPhotoDisplayUrl(photoPath: string): string | null {
+  const normalizedPath = photoPath.trim()
+
+  if (!normalizedPath) {
+    return null
+  }
+
+  try {
+    return Capacitor.convertFileSrc(normalizedPath)
+  } catch {
+    return null
+  }
 }
 
 /**
