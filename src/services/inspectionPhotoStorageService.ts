@@ -5,6 +5,7 @@ const INSPECTION_PHOTO_DIRECTORY = 'inspection-photos'
 
 export type InspectionPhotoStorageErrorCode =
   | 'source-unavailable'
+  | 'directory-unavailable'
   | 'copy-failed'
 
 export class InspectionPhotoStorageError extends Error {
@@ -44,12 +45,18 @@ export async function persistTemporaryInspectionPhotos(
   const persistedPaths: string[] = []
 
   try {
-    await Filesystem.mkdir({
-      path: INSPECTION_PHOTO_DIRECTORY,
-      directory: Directory.Data,
-      recursive: true,
-    })
+    await ensureInspectionPhotoDirectory()
+  } catch (error: unknown) {
+    logNativeStorageFailure('mkdir', error)
 
+    throw new InspectionPhotoStorageError(
+      'directory-unavailable',
+      '无法创建巡检照片存储目录，请检查应用存储空间后重试',
+      error,
+    )
+  }
+
+  try {
     for (const [index, sourceUri] of sourceUris.entries()) {
       const destinationPath = createDestinationPath(temporaryPhotos[index])
       const result = await Filesystem.copy({
@@ -63,6 +70,8 @@ export async function persistTemporaryInspectionPhotos(
 
     return persistedPaths
   } catch (error: unknown) {
+    logNativeStorageFailure('copy', error)
+
     const cleanupResult = await deletePersistedInspectionPhotos(persistedPaths)
     const cleanupMessage =
       cleanupResult.failedPaths.length > 0
@@ -71,7 +80,7 @@ export async function persistTemporaryInspectionPhotos(
 
     throw new InspectionPhotoStorageError(
       'copy-failed',
-      `保存现场照片失败${cleanupMessage}`,
+      `保存现场照片失败（复制阶段，错误码：copy-failed）${cleanupMessage}`,
       error,
     )
   }
@@ -129,4 +138,92 @@ function createDestinationPath(photo: TemporaryCameraPhoto | undefined): string 
   }
 
   return `${INSPECTION_PHOTO_DIRECTORY}/${photo.id}.jpg`
+}
+
+/**
+ * Capacitor Filesystem Android 实现在目录已存在时会让 mkdir 失败，
+ * 因此这里先探测，再按需创建，使重复提交保持幂等。
+ */
+async function ensureInspectionPhotoDirectory(): Promise<void> {
+  const existingType = await getInspectionPhotoDirectoryType()
+
+  if (existingType === 'directory') {
+    return
+  }
+
+  if (existingType === 'file') {
+    throw new InspectionPhotoStorageError(
+      'directory-unavailable',
+      '巡检照片存储位置被同名文件占用，无法保存照片',
+    )
+  }
+
+  try {
+    await Filesystem.mkdir({
+      path: INSPECTION_PHOTO_DIRECTORY,
+      directory: Directory.Data,
+      recursive: true,
+    })
+  } catch (mkdirError: unknown) {
+    // 两次并发提交可能都通过首次检查。再次探测可将“另一请求已创建目录”视为成功。
+    if ((await getInspectionPhotoDirectoryType()) === 'directory') {
+      return
+    }
+
+    throw mkdirError
+  }
+}
+
+async function getInspectionPhotoDirectoryType(): Promise<'directory' | 'file' | null> {
+  try {
+    const result = await Filesystem.stat({
+      path: INSPECTION_PHOTO_DIRECTORY,
+      directory: Directory.Data,
+    })
+
+    return result.type
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 仅记录原生插件的可诊断元数据；不写入相机 URI，避免在日志中暴露本地文件路径。
+ */
+function logNativeStorageFailure(stage: 'mkdir' | 'copy', error: unknown): void {
+  const nativeError = getNativeErrorDetails(error)
+
+  console.error('[InspectionPhotoStorage] Native storage operation failed', {
+    stage,
+    code: nativeError.code,
+    message: nativeError.message,
+  })
+}
+
+function getNativeErrorDetails(error: unknown): {
+  code: string | null
+  message: string | null
+} {
+  if (error instanceof Error) {
+    return {
+      code: getRecordString(error, 'code'),
+      message: error.message.trim() || null,
+    }
+  }
+
+  return {
+    code: getRecordString(error, 'code'),
+    message: getRecordString(error, 'message'),
+  }
+}
+
+function getRecordString(value: unknown, key: string): string | null {
+  if (typeof value !== 'object' || value === null) {
+    return null
+  }
+
+  const candidate = value as Record<string, unknown>
+  const field = candidate[key]
+
+  return typeof field === 'string' && field.trim() ? field : null
 }
